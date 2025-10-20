@@ -80,6 +80,9 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
+      # Mount proprietary data directories (Windows paths - update as needed)
+      # - D:\SALT\State Information_October:/mnt/state_data
+      # - D:\Nexus Threshold Research\historical_data\split_20250723_212859:/mnt/tax_data
     depends_on:
       postgres:
         condition: service_healthy
