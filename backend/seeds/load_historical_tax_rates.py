@@ -19,10 +19,14 @@ Usage:
 import logging
 import argparse
 import sys
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from decimal import Decimal
+
+# Add parent directory to path so we can import models
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func
