@@ -1,0 +1,34 @@
+Generic single-database configuration for Nexus Analyzer.
+
+## Creating a new migration
+
+```bash
+# Auto-generate migration from model changes
+alembic revision --autogenerate -m "description of changes"
+
+# Create empty migration
+alembic revision -m "description"
+```
+
+## Running migrations
+
+```bash
+# Upgrade to latest version
+alembic upgrade head
+
+# Downgrade one revision
+alembic downgrade -1
+
+# Show current revision
+alembic current
+
+# Show migration history
+alembic history
+```
+
+## Important Notes
+
+- Always review auto-generated migrations before applying
+- Test migrations in development before running in production
+- Create a database backup before running migrations in production
+- The DATABASE_URL environment variable overrides the alembic.ini setting
