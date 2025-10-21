@@ -39,8 +39,8 @@ class Settings(BaseSettings):
 
     # S3 / MinIO
     S3_ENDPOINT_URL: str = "http://localhost:9000"
-    S3_ACCESS_KEY: str
-    S3_SECRET_KEY: str
+    S3_ACCESS_KEY: Optional[str] = None
+    S3_SECRET_KEY: Optional[str] = None
     S3_BUCKET_NAME: str = "nexus-analyzer"
     S3_REGION: str = "us-east-1"
 
