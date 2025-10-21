@@ -45,7 +45,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login(data);
+      await login(data.email, data.password);
       // Redirect handled by AuthContext
     } catch (err) {
       setError(getErrorMessage(err));
