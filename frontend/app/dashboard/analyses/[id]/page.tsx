@@ -27,7 +27,7 @@ export default function AnalysisDetailPage({ params }: PageProps) {
   // Fetch analysis
   const { data: analysis, isLoading: analysisLoading } = useQuery({
     queryKey: ['analysis', analysisId],
-    queryFn: () => analysesApi.getById(analysisId),
+    queryFn: () => analysesApi.get(analysisId),
     enabled: !!analysisId,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
