@@ -4,7 +4,9 @@ Loads configuration from environment variables.
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator, ValidationInfo
 from typing import Optional
+import sys
 
 
 class Settings(BaseSettings):
@@ -67,6 +69,67 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore"
     )
+
+    @field_validator('SECRET_KEY')
+    @classmethod
+    def validate_secret_key(cls, v: str, info: ValidationInfo) -> str:
+        """Validate SECRET_KEY has sufficient strength."""
+        if not v:
+            raise ValueError("SECRET_KEY cannot be empty")
+
+        # Check minimum length (32 chars = 256 bits)
+        if len(v) < 32:
+            raise ValueError(
+                f"SECRET_KEY must be at least 32 characters (got {len(v)}). "
+                "Generate a secure key with: python backend/scripts/generate_secret_key.py"
+            )
+
+        # Check for common weak/example keys
+        weak_keys = [
+            "your-secret-key",
+            "change-me",
+            "secret",
+            "password",
+            "example",
+            "test",
+            "demo",
+            "dev",
+            "your-secret-key-min-32-chars-change-in-production",
+        ]
+
+        v_lower = v.lower()
+        for weak in weak_keys:
+            if weak in v_lower:
+                print(
+                    f"\n{'='*70}\n"
+                    f"WARNING: SECRET_KEY appears to contain weak/example text: '{weak}'\n"
+                    f"This is a SECURITY RISK in production!\n"
+                    f"Generate a secure key with:\n"
+                    f"  python backend/scripts/generate_secret_key.py\n"
+                    f"{'='*70}\n",
+                    file=sys.stderr
+                )
+                # In production, fail hard
+                environment = info.data.get('ENVIRONMENT', 'development')
+                if environment == 'production':
+                    raise ValueError(
+                        f"SECRET_KEY contains weak/example text in production environment. "
+                        f"Generate a secure key with: python backend/scripts/generate_secret_key.py"
+                    )
+
+        # Check entropy (should have variety of characters)
+        unique_chars = len(set(v))
+        if unique_chars < 16:
+            print(
+                f"\n{'='*70}\n"
+                f"WARNING: SECRET_KEY has low entropy (only {unique_chars} unique characters)\n"
+                f"Recommended: Use a cryptographically random key with high entropy.\n"
+                f"Generate one with: python backend/scripts/generate_secret_key.py\n"
+                f"{'='*70}\n",
+                file=sys.stderr
+            )
+
+        return v
 
     @property
     def cors_origins_list(self) -> list[str]:
