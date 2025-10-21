@@ -99,7 +99,19 @@ async def register(
     db.add(audit_log)
     db.commit()
 
-    return new_user
+    # Convert UUIDs to strings for JSON serialization
+    return UserResponse(
+        user_id=str(new_user.user_id),
+        tenant_id=str(new_user.tenant_id),
+        email=new_user.email,
+        first_name=new_user.first_name,
+        last_name=new_user.last_name,
+        role=new_user.role,
+        is_active=new_user.is_active,
+        email_verified=new_user.email_verified,
+        created_at=new_user.created_at,
+        last_login=new_user.last_login
+    )
 
 
 @router.post("/login", response_model=Token)
@@ -224,7 +236,19 @@ async def get_current_user_info(
 
     Requires authentication token in Authorization header.
     """
-    return current_user
+    # Convert UUIDs to strings for JSON serialization
+    return UserResponse(
+        user_id=str(current_user.user_id),
+        tenant_id=str(current_user.tenant_id),
+        email=current_user.email,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        role=current_user.role,
+        is_active=current_user.is_active,
+        email_verified=current_user.email_verified,
+        created_at=current_user.created_at,
+        last_login=current_user.last_login
+    )
 
 
 @router.post("/logout")

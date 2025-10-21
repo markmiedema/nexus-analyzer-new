@@ -4,13 +4,14 @@ Extracts tenant from subdomain and adds to request state.
 """
 
 from fastapi import Request, HTTPException, status
+from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
 from models.tenant import Tenant
 from database import SessionLocal
 
 
-class TenantMiddleware:
+class TenantMiddleware(BaseHTTPMiddleware):
     """
     Middleware to identify tenant from subdomain.
 
@@ -18,10 +19,7 @@ class TenantMiddleware:
     and adds tenant_id to request state.
     """
 
-    def __init__(self, app):
-        self.app = app
-
-    async def __call__(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next):
         """Process request and add tenant context."""
 
         # Extract tenant from hostname

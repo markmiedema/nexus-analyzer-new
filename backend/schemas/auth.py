@@ -52,7 +52,11 @@ class TokenData(BaseModel):
 
 
 class UserResponse(BaseModel):
-    """Schema for user data in responses."""
+    """Schema for user data in responses.
+
+    Note: UUIDs are converted to strings in the endpoint handlers
+    before being passed to this schema.
+    """
     user_id: str
     tenant_id: str
     email: str
