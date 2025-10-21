@@ -317,13 +317,13 @@ jobs:
           echo "Waiting for all services to be healthy..."
           timeout 180 bash -c '
             while true; do
-              # Check if all required services are healthy
-              postgres_health=$(docker compose ps postgres --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
-              redis_health=$(docker compose ps redis --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
-              minio_health=$(docker compose ps minio --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
-              backend_health=$(docker compose ps backend --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
-              frontend_health=$(docker compose ps frontend --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
-              celery_health=$(docker compose ps celery-worker --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+              # Use docker inspect for more reliable health status
+              postgres_health=$(docker inspect nexus-postgres --format="{{.State.Health.Status}}" 2>/dev/null || echo "starting")
+              redis_health=$(docker inspect nexus-redis --format="{{.State.Health.Status}}" 2>/dev/null || echo "starting")
+              minio_health=$(docker inspect nexus-minio --format="{{.State.Health.Status}}" 2>/dev/null || echo "starting")
+              backend_health=$(docker inspect nexus-backend --format="{{.State.Health.Status}}" 2>/dev/null || echo "starting")
+              frontend_health=$(docker inspect nexus-frontend --format="{{.State.Health.Status}}" 2>/dev/null || echo "starting")
+              celery_health=$(docker inspect nexus-celery-worker --format="{{.State.Health.Status}}" 2>/dev/null || echo "starting")
 
               echo "Service health status:"
               echo "  Postgres: $postgres_health"
