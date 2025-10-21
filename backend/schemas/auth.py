@@ -2,9 +2,10 @@
 Pydantic schemas for authentication endpoints.
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, validator, field_serializer
 from typing import Optional
 from datetime import datetime
+from uuid import UUID
 from models.user import UserRole
 
 
@@ -66,6 +67,11 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @field_serializer('user_id', 'tenant_id')
+    def serialize_uuid(self, value: UUID, _info) -> str:
+        """Convert UUID to string for JSON serialization."""
+        return str(value)
 
 
 class UserUpdate(BaseModel):
