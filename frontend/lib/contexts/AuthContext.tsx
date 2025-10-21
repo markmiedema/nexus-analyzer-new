@@ -10,10 +10,15 @@ interface User {
   role: string;
 }
 
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -34,36 +39,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+      // Login to get access token
+      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
-          password,
+          email: credentials.email,
+          password: credentials.password,
           tenant_subdomain: 'demo' // Default tenant for demo purposes
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Login failed');
+      if (!loginResponse.ok) {
+        const errorData = await loginResponse.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Login failed');
       }
 
-      const data = await response.json();
-      const userData: User = {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name,
-        role: data.user.role,
+      const { access_token } = await loginResponse.json();
+
+      // Fetch user data using the token
+      const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const userData = await userResponse.json();
+
+      const user: User = {
+        id: userData.user_id,
+        email: userData.email,
+        name: `${userData.first_name} ${userData.last_name}`,
+        role: userData.role,
       };
 
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', data.access_token);
+      setUser(user);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', access_token);
 
       router.push('/dashboard');
     } catch (error) {
