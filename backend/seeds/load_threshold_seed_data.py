@@ -101,8 +101,7 @@ def parse_threshold_data(state_code: str, state_data: Dict[str, Any], db: Sessio
                 sales_threshold=Decimal(str(sales_threshold)) if sales_threshold else None,
                 transaction_threshold=txn_threshold,
                 measurement_period=measurement_window,
-                threshold_measurement=measurement,
-                is_active=True
+                threshold_measurement=measurement
             )
 
             db.add(rule)
@@ -130,11 +129,8 @@ def parse_threshold_data(state_code: str, state_data: Dict[str, Any], db: Sessio
                 state_name=state_name,
                 state_tax_rate=Decimal(str(combined_avg)),  # Using combined_avg as state rate
                 avg_local_tax_rate=Decimal("0.00"),  # Will be calculated from ZIP data later
-                combined_tax_rate=Decimal(str(combined_avg)),
-                annual_interest_rate=Decimal(str(interest_penalty_data.get("annual_interest_rate", 0))),
-                penalty_rate=Decimal(str(interest_penalty_data.get("penalty_rate", 0))),
-                zip_code_count=0,  # Will be updated when ZIP data is loaded
-                last_updated=datetime.utcnow()
+                interest_rate_annual=Decimal(str(interest_penalty_data.get("annual_interest_rate", 0))),
+                late_payment_penalty_rate=Decimal(str(interest_penalty_data.get("penalty_rate", 0) * 100))  # Convert to percentage
             )
 
             db.add(tax_config)
