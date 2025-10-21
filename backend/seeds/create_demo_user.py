@@ -5,7 +5,7 @@ Create demo tenant and user for development/testing.
 from database import SessionLocal
 from models.tenant import Tenant
 from models.user import User, UserRole
-from auth_utils import get_password_hash
+from services.auth_service import auth_service
 import uuid
 
 def create_demo_data():
@@ -20,15 +20,26 @@ def create_demo_data():
             print(f"Tenant: {existing_tenant.company_name}")
 
             # Check for demo user
-            existing_user = db.query(User).filter(User.email == 'demo@nexusanalyzer.com').first()
+            existing_user = db.query(User).filter(
+                User.email == 'demo@nexusanalyzer.com',
+                User.tenant_id == existing_tenant.tenant_id
+            ).first()
             if existing_user:
                 print(f"Demo user already exists: demo@nexusanalyzer.com")
+                print("\n" + "="*50)
+                print("DEMO CREDENTIALS:")
+                print("="*50)
+                print(f"Email:    demo@nexusanalyzer.com")
+                print(f"Password: demo123")
+                print(f"Tenant:   demo")
+                print(f"Role:     {existing_user.role.value}")
+                print("="*50)
                 return
 
         # Create tenant
         if not existing_tenant:
             tenant = Tenant(
-                tenant_id=str(uuid.uuid4()),
+                tenant_id=uuid.uuid4(),
                 company_name='Demo Company',
                 subdomain='demo',
                 is_active=True
@@ -42,13 +53,15 @@ def create_demo_data():
 
         # Create demo user
         user = User(
-            user_id=str(uuid.uuid4()),
+            user_id=uuid.uuid4(),
             tenant_id=tenant.tenant_id,
             email='demo@nexusanalyzer.com',
-            full_name='Demo User',
-            hashed_password=get_password_hash('demo123'),
+            first_name='Demo',
+            last_name='User',
+            password_hash=auth_service.hash_password('demo123'),
             role=UserRole.ADMIN,
-            is_active=True
+            is_active=True,
+            email_verified=True
         )
         db.add(user)
         db.commit()
@@ -60,11 +73,14 @@ def create_demo_data():
         print("="*50)
         print(f"Email:    demo@nexusanalyzer.com")
         print(f"Password: demo123")
+        print(f"Tenant:   demo")
         print(f"Role:     {user.role.value}")
         print("="*50)
 
     except Exception as e:
         print(f"Error creating demo data: {e}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
         raise
     finally:
