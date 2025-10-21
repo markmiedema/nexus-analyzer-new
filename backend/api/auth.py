@@ -21,11 +21,14 @@ from schemas.auth import (
 from services.auth_service import auth_service
 from dependencies.auth import get_current_user, get_current_active_user
 from middleware.tenant import get_current_tenant
+from config import settings
+from utils.rate_limit import limiter
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def register(
     user_data: UserRegister,
     request: Request,
@@ -115,6 +118,7 @@ async def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def login(
     credentials: UserLogin,
     request: Request,
@@ -282,6 +286,7 @@ async def logout(
 
 
 @router.post("/change-password")
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def change_password(
     password_data: PasswordChange,
     current_user: User = Depends(get_current_user),

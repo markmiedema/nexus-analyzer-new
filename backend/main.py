@@ -2,10 +2,13 @@
 FastAPI application entry point for Nexus Analyzer.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from config import settings
 from middleware.tenant import TenantMiddleware
+from utils.rate_limit import limiter
 
 # Import API routers
 from api import auth, tenants, users, csv_processor, business_profile, nexus_rules, liability, reports
@@ -18,6 +21,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Add rate limit state and exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS
 app.add_middleware(

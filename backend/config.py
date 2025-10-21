@@ -51,6 +51,14 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"
 
+    # Rate Limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_STORAGE_URL: Optional[str] = None  # Defaults to REDIS_URL if not set
+    # Format: "requests/time_period" e.g. "5/minute", "100/hour"
+    RATE_LIMIT_DEFAULT: str = "100/minute"  # General API endpoints
+    RATE_LIMIT_AUTH: str = "5/minute"  # Login/register endpoints
+    RATE_LIMIT_UPLOAD: str = "10/hour"  # File upload endpoints
+
     # Celery
     CELERY_BROKER_URL: Optional[str] = None
     CELERY_RESULT_BACKEND: Optional[str] = None
