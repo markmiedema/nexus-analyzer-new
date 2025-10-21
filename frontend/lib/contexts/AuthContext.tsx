@@ -6,8 +6,11 @@ import { useRouter } from 'next/navigation';
 interface User {
   user_id: string;
   email: string;
+  first_name: string;
+  last_name: string;
   full_name: string;
-  tenant_id?: string;
+  tenant_id: string;
+  role: string;
 }
 
 interface LoginData {
@@ -55,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json();
+        // Add full_name for convenience
+        userData.full_name = `${userData.first_name} ${userData.last_name}`;
         setUser(userData);
       } else {
         // Token is invalid
