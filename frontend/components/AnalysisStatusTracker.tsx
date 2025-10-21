@@ -4,7 +4,9 @@
 
 'use client';
 
-import { AnalysisStatus } from '@/lib/api/types';
+import { Analysis } from '@/lib/api';
+
+type AnalysisStatus = Analysis['status'];
 
 interface AnalysisStatusTrackerProps {
   status: AnalysisStatus;
@@ -19,29 +21,24 @@ interface StatusStep {
 
 const STATUS_STEPS: StatusStep[] = [
   {
-    id: 'draft',
-    label: 'Draft',
-    description: 'Analysis created',
+    id: 'pending',
+    label: 'Pending',
+    description: 'Analysis queued for processing',
   },
   {
-    id: 'uploading_csv',
-    label: 'Uploading',
-    description: 'Uploading transaction data',
-  },
-  {
-    id: 'processing_csv',
-    label: 'Processing CSV',
-    description: 'Validating and processing transactions',
-  },
-  {
-    id: 'processing_nexus',
-    label: 'Determining Nexus',
-    description: 'Analyzing state-by-state obligations',
+    id: 'processing',
+    label: 'Processing',
+    description: 'Analyzing transactions and determining nexus',
   },
   {
     id: 'completed',
     label: 'Completed',
     description: 'Analysis complete',
+  },
+  {
+    id: 'failed',
+    label: 'Failed',
+    description: 'Analysis encountered an error',
   },
 ];
 

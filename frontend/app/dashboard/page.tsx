@@ -21,8 +21,8 @@ export default function DashboardPage() {
         return 'badge-success';
       case 'failed':
         return 'badge-danger';
-      case 'processing_csv':
-      case 'processing_nexus':
+      case 'processing':
+      case 'pending':
         return 'badge-warning';
       default:
         return 'badge-neutral';
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     );
   }
 
-  const analyses = data?.items || [];
+  const analyses = data || [];
 
   return (
     <div>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
               Total Analyses
             </div>
             <div className="text-3xl font-bold text-primary-700 mt-2">
-              {data?.total || 0}
+              {analyses.length}
             </div>
           </div>
         </div>
@@ -94,9 +94,8 @@ export default function DashboardPage() {
               {
                 analyses.filter(
                   (a) =>
-                    a.status === 'processing_csv' ||
-                    a.status === 'processing_nexus' ||
-                    a.status === 'uploading_csv'
+                    a.status === 'processing' ||
+                    a.status === 'pending'
                 ).length
               }
             </div>
@@ -132,16 +131,16 @@ export default function DashboardPage() {
               <thead className="bg-neutral-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Period
+                    Analysis ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Created
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Completed
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
                     Actions
@@ -153,12 +152,8 @@ export default function DashboardPage() {
                   <tr key={analysis.analysis_id} className="hover:bg-neutral-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-900">
-                        {analysis.client_name}
+                        {analysis.analysis_id.slice(0, 8)}...
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
-                      {format(new Date(analysis.period_start), 'MMM d, yyyy')} -{' '}
-                      {format(new Date(analysis.period_end), 'MMM d, yyyy')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`badge ${getStatusBadgeClass(analysis.status)}`}>
@@ -167,6 +162,9 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
                       {format(new Date(analysis.created_at), 'MMM d, yyyy')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                      {analysis.completed_at ? format(new Date(analysis.completed_at), 'MMM d, yyyy') : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link

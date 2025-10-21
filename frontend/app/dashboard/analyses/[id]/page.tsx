@@ -32,7 +32,7 @@ export default function AnalysisDetailPage({ params }: PageProps) {
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       // Refetch every 5 seconds if processing
-      return status && ['uploading_csv', 'processing_csv', 'processing_nexus'].includes(status)
+      return status && ['processing', 'pending'].includes(status)
         ? 5000
         : false;
     },
