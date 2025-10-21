@@ -69,7 +69,7 @@ export default function NewAnalysisPage() {
   // Create business profile mutation
   const createProfileMutation = useMutation({
     mutationFn: ({ analysisId, data }: { analysisId: string; data: BusinessProfileFormData }) =>
-      businessProfileApi.createOrUpdate(analysisId, {
+      businessProfileApi.create({
         ...data,
         marketplace_names: data.marketplace_names?.[0]
           ? (data.marketplace_names[0] as string).split(',').map((s) => s.trim())

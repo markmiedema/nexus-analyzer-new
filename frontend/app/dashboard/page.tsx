@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 export default function DashboardPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['analyses'],
-    queryFn: () => analysesApi.getAll(1, 10),
+    queryFn: () => analysesApi.list(),
   });
 
   const getStatusBadgeClass = (status: Analysis['status']) => {

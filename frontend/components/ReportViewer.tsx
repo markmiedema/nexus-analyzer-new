@@ -25,7 +25,7 @@ export function ReportViewer({ analysisId }: ReportViewerProps) {
 
   // Generate summary report
   const generateSummaryMutation = useMutation({
-    mutationFn: () => reportsApi.generateSummary(analysisId),
+    mutationFn: () => reportsApi.generate(analysisId, 'summary'),
     onSuccess: () => {
       setError('');
       // Refetch reports after a delay to allow generation to complete
@@ -40,7 +40,7 @@ export function ReportViewer({ analysisId }: ReportViewerProps) {
 
   // Generate detailed report
   const generateDetailedMutation = useMutation({
-    mutationFn: () => reportsApi.generateDetailed(analysisId),
+    mutationFn: () => reportsApi.generate(analysisId, 'detailed'),
     onSuccess: () => {
       setError('');
       // Refetch reports after a delay to allow generation to complete
