@@ -5,6 +5,7 @@ Pydantic schemas for authentication endpoints.
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional
 from datetime import datetime
+from uuid import UUID
 from models.user import UserRole
 
 
@@ -53,8 +54,8 @@ class TokenData(BaseModel):
 
 class UserResponse(BaseModel):
     """Schema for user data in responses."""
-    user_id: str
-    tenant_id: str
+    user_id: UUID
+    tenant_id: UUID
     email: str
     first_name: str
     last_name: str
