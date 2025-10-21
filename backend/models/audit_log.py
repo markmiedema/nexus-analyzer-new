@@ -51,7 +51,7 @@ class AuditLog(Base):
 
     # Additional context
     description = Column(Text, nullable=True)
-    metadata = Column(JSONB, nullable=True)  # Additional flexible data
+    extra_data = Column('metadata', JSONB, nullable=True)  # Additional flexible data (column named 'metadata' in DB)
 
     # Result
     success = Column(Boolean, default=True, nullable=False, index=True)
