@@ -10,20 +10,24 @@ from database import get_db
 from models.user import User, UserRole
 from models.tenant import Tenant
 from services.auth_service import auth_service
+from utils.cookies import get_token_from_cookie_or_header
 
-# Security scheme for bearer token
-security = HTTPBearer()
+# Security scheme for bearer token (auto_error=False allows cookie fallback)
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
     """
     Dependency to get the current authenticated user from JWT token.
+    Supports both httpOnly cookies (preferred) and Authorization header.
 
     Args:
-        credentials: HTTP Authorization header with bearer token
+        request: FastAPI Request object
+        credentials: HTTP Authorization header with bearer token (optional)
         db: Database session
 
     Returns:
@@ -38,8 +42,17 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    # Get token from cookie or Authorization header
+    token = get_token_from_cookie_or_header(request, "access_token")
+
+    # Fallback to credentials if no cookie
+    if not token and credentials:
+        token = credentials.credentials
+
+    if not token:
+        raise credentials_exception
+
     # Decode token
-    token = credentials.credentials
     payload = auth_service.decode_access_token(token)
 
     if payload is None:

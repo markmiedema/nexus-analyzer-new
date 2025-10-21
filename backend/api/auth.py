@@ -2,7 +2,7 @@
 Authentication API endpoints.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
 from datetime import datetime
 import uuid
@@ -23,6 +23,7 @@ from dependencies.auth import get_current_user, get_current_active_user
 from middleware.tenant import get_current_tenant
 from config import settings
 from utils.rate_limit import limiter
+from utils.cookies import set_auth_cookies, clear_auth_cookies
 
 router = APIRouter()
 
@@ -117,19 +118,22 @@ async def register(
     )
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=UserResponse)
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def login(
     credentials: UserLogin,
     request: Request,
+    response: Response,
     db: Session = Depends(get_db)
 ):
     """
-    Login and receive access token.
+    Login and receive httpOnly cookies with access and refresh tokens.
 
     - **email**: User's email address
     - **password**: User's password
     - **tenant_subdomain**: Optional tenant subdomain
+
+    Sets httpOnly cookies: access_token and refresh_token
     """
 
     # Get tenant
@@ -228,7 +232,22 @@ async def login(
     db.add(audit_log)
     db.commit()
 
-    return token_data
+    # Set httpOnly cookies
+    set_auth_cookies(response, token_data["access_token"], token_data["refresh_token"])
+
+    # Return user data (tokens are in cookies now)
+    return UserResponse(
+        user_id=str(user.user_id),
+        tenant_id=str(user.tenant_id),
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        role=user.role,
+        is_active=user.is_active,
+        email_verified=user.email_verified,
+        created_at=user.created_at,
+        last_login=user.last_login
+    )
 
 
 @router.get("/me", response_model=UserResponse)
@@ -258,14 +277,14 @@ async def get_current_user_info(
 @router.post("/logout")
 async def logout(
     request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Logout user (client should delete token).
+    Logout user and clear httpOnly cookies.
 
-    This endpoint mainly exists for audit logging purposes.
-    The actual token invalidation happens client-side.
+    Clears access_token and refresh_token cookies.
     """
 
     # Log logout
@@ -282,7 +301,90 @@ async def logout(
     db.add(audit_log)
     db.commit()
 
+    # Clear httpOnly cookies
+    clear_auth_cookies(response)
+
     return {"message": "Successfully logged out"}
+
+
+@router.post("/refresh", response_model=UserResponse)
+@limiter.limit(settings.RATE_LIMIT_DEFAULT)
+async def refresh_access_token(
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    """
+    Refresh access token using refresh token from httpOnly cookie.
+
+    Returns new access and refresh tokens in httpOnly cookies.
+    """
+    # Get refresh token from cookie
+    refresh_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No refresh token provided"
+        )
+
+    # Decode and validate refresh token
+    payload = auth_service.decode_access_token(refresh_token)
+
+    if payload is None or payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token"
+        )
+
+    # Get user from database
+    user_id = payload.get("sub")
+    user = db.query(User).filter(User.user_id == user_id).first()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive"
+        )
+
+    # Create new tokens
+    token_data = auth_service.create_tokens_for_user(
+        user_id=str(user.user_id),
+        tenant_id=str(user.tenant_id),
+        email=user.email,
+        role=user.role.value
+    )
+
+    # Set new cookies
+    set_auth_cookies(response, token_data["access_token"], token_data["refresh_token"])
+
+    # Log token refresh
+    audit_log = AuditLog(
+        tenant_id=user.tenant_id,
+        user_id=user.user_id,
+        action="token_refresh",
+        resource_type="user",
+        resource_id=user.user_id,
+        ip_address=request.client.host if request.client else None,
+        success=True,
+        description=f"Access token refreshed for {user.email}"
+    )
+    db.add(audit_log)
+    db.commit()
+
+    # Return user data
+    return UserResponse(
+        user_id=str(user.user_id),
+        tenant_id=str(user.tenant_id),
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        role=user.role,
+        is_active=user.is_active,
+        email_verified=user.email_verified,
+        created_at=user.created_at,
+        last_login=user.last_login
+    )
 
 
 @router.post("/change-password")

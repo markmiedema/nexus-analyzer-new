@@ -95,9 +95,40 @@ class AuthService:
             return None
 
     @staticmethod
+    def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        """
+        Create a JWT refresh token.
+
+        Args:
+            data: Dictionary containing claims to encode in the token
+            expires_delta: Optional expiration time delta
+
+        Returns:
+            str: Encoded JWT refresh token
+        """
+        to_encode = data.copy()
+
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(
+                days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            )
+
+        to_encode.update({"exp": expire, "iat": datetime.utcnow()})
+
+        encoded_jwt = jwt.encode(
+            to_encode,
+            settings.SECRET_KEY,
+            algorithm=settings.JWT_ALGORITHM
+        )
+
+        return encoded_jwt
+
+    @staticmethod
     def create_tokens_for_user(user_id: str, tenant_id: str, email: str, role: str) -> dict:
         """
-        Create access token for a user.
+        Create both access and refresh tokens for a user.
 
         Args:
             user_id: User's unique identifier
@@ -106,8 +137,9 @@ class AuthService:
             role: User's role
 
         Returns:
-            dict: Dictionary containing access_token and token_type
+            dict: Dictionary containing access_token, refresh_token, and token_type
         """
+        # Access token - short lived
         access_token_data = {
             "sub": str(user_id),
             "tenant_id": str(tenant_id),
@@ -115,11 +147,18 @@ class AuthService:
             "role": role,
             "type": "access"
         }
-
         access_token = AuthService.create_access_token(data=access_token_data)
+
+        # Refresh token - longer lived, minimal data
+        refresh_token_data = {
+            "sub": str(user_id),
+            "type": "refresh"
+        }
+        refresh_token = AuthService.create_refresh_token(data=refresh_token_data)
 
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "bearer"
         }
 

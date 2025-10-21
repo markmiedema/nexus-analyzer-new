@@ -26,7 +26,13 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # Shorter for better security with refresh tokens
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # Refresh tokens last 7 days
+
+    # Cookie Settings
+    COOKIE_SECURE: bool = False  # Set to True in production with HTTPS
+    COOKIE_SAMESITE: str = "lax"  # "strict", "lax", or "none"
+    COOKIE_DOMAIN: Optional[str] = None  # Set to your domain in production
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
