@@ -70,10 +70,9 @@ export default function NewAnalysisPage() {
   const createProfileMutation = useMutation({
     mutationFn: ({ analysisId, data }: { analysisId: string; data: BusinessProfileFormData }) =>
       businessProfileApi.create({
-        business_name: data.business_name || '',
-        tax_id: data.tax_id,
-        business_type: data.business_type,
-        primary_state: data.primary_state,
+        business_name: data.legal_business_name || data.doing_business_as || '',
+        business_type: data.business_structure,
+        primary_state: data.locations?.[0]?.state_code,
       }),
     onSuccess: () => {
       setCurrentStep('processing');
