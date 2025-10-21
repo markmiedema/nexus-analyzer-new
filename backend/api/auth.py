@@ -288,6 +288,7 @@ async def logout(
 @router.post("/change-password")
 @limiter.limit(settings.RATE_LIMIT_AUTH)
 async def change_password(
+    request: Request,
     password_data: PasswordChange,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
