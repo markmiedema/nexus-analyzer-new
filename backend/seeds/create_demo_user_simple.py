@@ -26,11 +26,11 @@ def create_demo_data():
         tenant = cur.fetchone()
 
         if not tenant:
-            # Create tenant
+            # Create tenant - let defaults handle subscription_plan and status
             tenant_id = str(uuid.uuid4())
             cur.execute(
-                "INSERT INTO tenants (tenant_id, company_name, subdomain, subscription_plan, status) VALUES (%s, %s, %s, %s, %s)",
-                (tenant_id, 'Demo Company', 'demo', 'free', 'active')
+                "INSERT INTO tenants (tenant_id, company_name, subdomain) VALUES (%s, %s, %s)",
+                (tenant_id, 'Demo Company', 'demo')
             )
             conn.commit()
             print(f"✓ Created tenant: Demo Company")
