@@ -19,11 +19,12 @@ def create_demo_data():
             print("Demo tenant already exists!")
             print(f"Tenant: {existing_tenant.company_name}")
 
-            # Check for demo user
+            # Check for demo user and delete if exists (to recreate with correct fields)
             existing_user = db.query(User).filter(User.email == 'demo@nexusanalyzer.com').first()
             if existing_user:
-                print(f"Demo user already exists: demo@nexusanalyzer.com")
-                return
+                print(f"Demo user already exists: demo@nexusanalyzer.com - deleting to recreate...")
+                db.delete(existing_user)
+                db.commit()
 
         # Create tenant
         if not existing_tenant:
@@ -45,10 +46,12 @@ def create_demo_data():
             user_id=str(uuid.uuid4()),
             tenant_id=tenant.tenant_id,
             email='demo@nexusanalyzer.com',
-            full_name='Demo User',
-            hashed_password=AuthService.hash_password('demo123'),
+            first_name='Demo',
+            last_name='User',
+            password_hash=AuthService.hash_password('demo123'),
             role=UserRole.ADMIN,
-            is_active=True
+            is_active='true',
+            email_verified='true'
         )
         db.add(user)
         db.commit()
