@@ -38,24 +38,10 @@ export default function AnalysisDetailPage({ params }: PageProps) {
     },
   });
 
-  // Fetch nexus summary
-  const { data: nexusSummary } = useQuery({
-    queryKey: ['nexus-summary', analysisId],
-    queryFn: () => nexusApi.getSummary(analysisId),
-    enabled: !!analysisId && analysis?.status === 'completed',
-  });
-
   // Fetch nexus results
   const { data: nexusResults } = useQuery({
     queryKey: ['nexus-results', analysisId],
     queryFn: () => nexusApi.getResults(analysisId),
-    enabled: !!analysisId && analysis?.status === 'completed',
-  });
-
-  // Fetch liability summary
-  const { data: liabilitySummary } = useQuery({
-    queryKey: ['liability-summary', analysisId],
-    queryFn: () => liabilityApi.getSummary(analysisId),
     enabled: !!analysisId && analysis?.status === 'completed',
   });
 
@@ -65,6 +51,23 @@ export default function AnalysisDetailPage({ params }: PageProps) {
     queryFn: () => liabilityApi.getEstimates(analysisId),
     enabled: !!analysisId && analysis?.status === 'completed',
   });
+
+  // Compute nexus summary from results
+  const nexusSummary = nexusResults ? {
+    total_nexus_states: nexusResults.length,
+    physical_nexus_count: nexusResults.filter(r => r.nexus_type === 'physical').length,
+    economic_nexus_count: nexusResults.filter(r => r.nexus_type === 'economic').length,
+  } : null;
+
+  // Compute liability summary from estimates
+  const liabilitySummary = liabilityEstimates ? {
+    total_liability_mid: liabilityEstimates.reduce((sum, est) => sum + (est.mid_estimate || 0), 0),
+    high_risk_count: liabilityEstimates.filter(est => est.risk_level === 'high').length,
+    top_5_states: liabilityEstimates
+      .sort((a, b) => (b.mid_estimate || 0) - (a.mid_estimate || 0))
+      .slice(0, 5)
+      .map(est => ({ state: est.state, liability: est.mid_estimate || 0 })),
+  } : null;
 
   if (!analysisId) {
     return (
