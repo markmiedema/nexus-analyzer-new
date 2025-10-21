@@ -244,7 +244,7 @@ export function BusinessProfileForm({
         <div className="card-body space-y-4">
           {fields.length === 0 ? (
             <p className="text-sm text-neutral-500 text-center py-4">
-              No locations added yet. Click "Add Location" to begin.
+              No locations added yet. Click &quot;Add Location&quot; to begin.
             </p>
           ) : (
             fields.map((field, index) => (

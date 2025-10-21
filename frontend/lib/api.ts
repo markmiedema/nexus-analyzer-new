@@ -258,7 +258,7 @@ export const reportsApi = {
   },
 };
 
-export default {
+const api = {
   analysesApi,
   businessProfileApi,
   nexusApi,
@@ -266,3 +266,5 @@ export default {
   reportsApi,
   getErrorMessage,
 };
+
+export default api;
