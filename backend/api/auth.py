@@ -77,8 +77,8 @@ async def register(
         first_name=user_data.first_name,
         last_name=user_data.last_name,
         role=UserRole.VIEWER,  # Default role
-        is_active="true",
-        email_verified="false"
+        is_active=True,
+        email_verified=False
     )
 
     db.add(new_user)
@@ -192,7 +192,7 @@ async def login(
         )
 
     # Check if user is active
-    if user.is_active != "true":
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
