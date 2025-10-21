@@ -42,7 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          tenant_subdomain: 'demo' // Default tenant for demo purposes
+        }),
       });
 
       if (!response.ok) {

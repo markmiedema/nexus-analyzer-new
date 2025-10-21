@@ -164,7 +164,7 @@ export default function LoginPage() {
           <div className="text-center text-sm text-neutral-500 mt-4 p-4 bg-neutral-100 rounded-md">
             <p className="font-medium mb-1">Demo Account:</p>
             <p>Email: demo@nexusanalyzer.com</p>
-            <p>Password: demo123</p>
+            <p>Password: password123</p>
           </div>
         </form>
       </div>
