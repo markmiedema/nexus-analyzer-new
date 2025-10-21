@@ -10,7 +10,7 @@ from uuid import UUID
 from database import get_db
 from models.user import User
 from models.nexus_rule import NexusRule
-from models.nexus_result import NexusResult, NexusStatus
+from models.nexus_result import NexusResult, NexusDetermination
 from models.analysis import Analysis
 from dependencies.auth import get_current_user
 from workers.tasks import run_nexus_determination
@@ -134,8 +134,8 @@ async def get_nexus_results(
     # Apply status filter if provided
     if nexus_status:
         try:
-            status_enum = NexusStatus(nexus_status)
-            query = query.filter(NexusResult.nexus_status == status_enum)
+            status_enum = NexusDetermination(nexus_status)
+            query = query.filter(NexusResult.overall_determination == status_enum)
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -148,7 +148,7 @@ async def get_nexus_results(
         {
             'result_id': str(result.result_id),
             'state': result.state,
-            'nexus_status': result.nexus_status.value,
+            'nexus_status': result.overall_determination.value,
             'nexus_date': result.nexus_date.isoformat() if result.nexus_date else None,
             'physical_nexus': result.physical_nexus,
             'economic_nexus': result.economic_nexus,
@@ -217,11 +217,11 @@ async def get_nexus_summary(
     no_nexus_states = []
 
     for result in results:
-        if result.nexus_status == NexusStatus.NEXUS_PHYSICAL:
+        if result.overall_determination == NexusDetermination.NEXUS_PHYSICAL:
             physical_nexus_states.append(result.state)
-        elif result.nexus_status == NexusStatus.NEXUS_ECONOMIC:
+        elif result.overall_determination == NexusDetermination.NEXUS_ECONOMIC:
             economic_nexus_states.append(result.state)
-        elif result.nexus_status == NexusStatus.CLOSE_TO_THRESHOLD:
+        elif result.overall_determination == NexusDetermination.CLOSE_TO_THRESHOLD:
             close_to_threshold_states.append(result.state)
         else:
             no_nexus_states.append(result.state)
@@ -308,7 +308,7 @@ async def get_state_nexus_result(
     return {
         'result_id': str(result.result_id),
         'state': result.state,
-        'nexus_status': result.nexus_status.value,
+        'nexus_status': result.overall_determination.value,
         'nexus_date': result.nexus_date.isoformat() if result.nexus_date else None,
         'physical_nexus': result.physical_nexus,
         'economic_nexus': result.economic_nexus,

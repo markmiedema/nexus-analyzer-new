@@ -16,6 +16,8 @@ class NexusDetermination(str, enum.Enum):
     HAS_NEXUS = "has_nexus"
     NO_NEXUS = "no_nexus"
     CLOSE_TO_THRESHOLD = "close_to_threshold"  # Within 10% of threshold
+    NEXUS_PHYSICAL = "nexus_physical"  # Physical presence nexus
+    NEXUS_ECONOMIC = "nexus_economic"  # Economic nexus (sales/transaction thresholds met)
 
 
 class ConfidenceLevel(str, enum.Enum):

@@ -173,12 +173,12 @@ def run_nexus_determination(self, analysis_id: str):
         results = engine.determine_nexus(analysis_id, business_profile)
 
         # Count results by nexus status
-        from models.nexus_result import NexusStatus
-        nexus_states = sum(1 for r in results if r.nexus_status in [
-            NexusStatus.NEXUS_PHYSICAL,
-            NexusStatus.NEXUS_ECONOMIC
+        from models.nexus_result import NexusDetermination
+        nexus_states = sum(1 for r in results if r.overall_determination in [
+            NexusDetermination.NEXUS_PHYSICAL,
+            NexusDetermination.NEXUS_ECONOMIC
         ])
-        close_states = sum(1 for r in results if r.nexus_status == NexusStatus.CLOSE_TO_THRESHOLD)
+        close_states = sum(1 for r in results if r.overall_determination == NexusDetermination.CLOSE_TO_THRESHOLD)
 
         # Update analysis status
         analysis.status = AnalysisStatus.COMPLETED

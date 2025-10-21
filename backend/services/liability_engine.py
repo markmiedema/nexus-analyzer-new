@@ -10,7 +10,7 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 import logging
 
-from models.nexus_result import NexusResult, NexusStatus
+from models.nexus_result import NexusResult, NexusDetermination
 from models.transaction import Transaction
 from models.state_tax_config import StateTaxConfig
 from models.liability_estimate import LiabilityEstimate, RiskLevel
@@ -75,9 +75,9 @@ class LiabilityEngine:
         # Get nexus results for states with nexus
         nexus_results = self.db.query(NexusResult).filter(
             NexusResult.analysis_id == analysis_id,
-            NexusResult.nexus_status.in_([
-                NexusStatus.NEXUS_PHYSICAL,
-                NexusStatus.NEXUS_ECONOMIC
+            NexusResult.overall_determination.in_([
+                NexusDetermination.NEXUS_PHYSICAL,
+                NexusDetermination.NEXUS_ECONOMIC
             ])
         ).all()
 
@@ -156,7 +156,7 @@ class LiabilityEngine:
             risk_level = self._assess_risk(
                 state,
                 period_liability['mid_estimate'],
-                nexus_result.nexus_status,
+                nexus_result.overall_determination,
                 nexus_result.confidence_level,
                 bool(penalty_amount)
             )
@@ -166,7 +166,7 @@ class LiabilityEngine:
                 risk_level,
                 period_liability['mid_estimate'],
                 penalty_amount,
-                nexus_result.nexus_status
+                nexus_result.overall_determination
             )
 
             # Build assumptions note
@@ -394,7 +394,7 @@ class LiabilityEngine:
         self,
         state: str,
         liability_amount: float,
-        nexus_status: NexusStatus,
+        nexus_status: NexusDetermination,
         confidence_level: Optional[str],
         has_penalties: bool
     ) -> RiskLevel:
@@ -415,7 +415,7 @@ class LiabilityEngine:
         high_risk_factors = 0
 
         # Physical nexus is higher risk than economic
-        if nexus_status == NexusStatus.NEXUS_PHYSICAL:
+        if nexus_status == NexusDetermination.NEXUS_PHYSICAL:
             high_risk_factors += 2
 
         # High liability amounts increase risk
@@ -445,7 +445,7 @@ class LiabilityEngine:
         risk_level: RiskLevel,
         liability_amount: float,
         penalty_amount: Optional[float],
-        nexus_status: NexusStatus
+        nexus_status: NexusDetermination
     ) -> str:
         """
         Generate recommendation based on liability and risk.
@@ -478,7 +478,7 @@ class LiabilityEngine:
             recommendations.append(f"Moderate liability (${liability_amount:,.2f}). Plan for registration and filing.")
 
         # Nexus type recommendations
-        if nexus_status == NexusStatus.NEXUS_PHYSICAL:
+        if nexus_status == NexusDetermination.NEXUS_PHYSICAL:
             recommendations.append("Physical presence creates strong nexus obligation.")
 
         # Default recommendation if low risk

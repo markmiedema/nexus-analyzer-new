@@ -12,7 +12,7 @@ import os
 import logging
 
 from models.analysis import Analysis
-from models.nexus_result import NexusResult, NexusStatus
+from models.nexus_result import NexusResult, NexusDetermination
 from models.liability_estimate import LiabilityEstimate, RiskLevel
 from models.business_profile import BusinessProfile
 from models.transaction import Transaction
@@ -267,10 +267,10 @@ class ReportGenerator:
 
     def _format_nexus_summary(self, nexus_results: List[NexusResult]) -> Dict:
         """Format nexus results summary."""
-        physical_nexus = [nr for nr in nexus_results if nr.nexus_status == NexusStatus.NEXUS_PHYSICAL]
-        economic_nexus = [nr for nr in nexus_results if nr.nexus_status == NexusStatus.NEXUS_ECONOMIC]
-        close_to_threshold = [nr for nr in nexus_results if nr.nexus_status == NexusStatus.CLOSE_TO_THRESHOLD]
-        no_nexus = [nr for nr in nexus_results if nr.nexus_status == NexusStatus.NO_NEXUS]
+        physical_nexus = [nr for nr in nexus_results if nr.overall_determination == NexusDetermination.NEXUS_PHYSICAL]
+        economic_nexus = [nr for nr in nexus_results if nr.overall_determination == NexusDetermination.NEXUS_ECONOMIC]
+        close_to_threshold = [nr for nr in nexus_results if nr.overall_determination == NexusDetermination.CLOSE_TO_THRESHOLD]
+        no_nexus = [nr for nr in nexus_results if nr.overall_determination == NexusDetermination.NO_NEXUS]
 
         return {
             'total_states_analyzed': len(nexus_results),
@@ -337,8 +337,8 @@ class ReportGenerator:
         """Format individual nexus result."""
         return {
             'state': result.state,
-            'nexus_status': result.nexus_status.value,
-            'nexus_status_label': result.nexus_status.value.replace('_', ' ').title(),
+            'nexus_status': result.overall_determination.value,
+            'nexus_status_label': result.overall_determination.value.replace('_', ' ').title(),
             'physical_nexus': result.physical_nexus,
             'economic_nexus': result.economic_nexus,
             'total_sales': result.total_sales,
@@ -421,7 +421,7 @@ class ReportGenerator:
         # Medium priority: Close to threshold
         close_states = [
             nr for nr in nexus_results
-            if nr.nexus_status == NexusStatus.CLOSE_TO_THRESHOLD
+            if nr.overall_determination == NexusDetermination.CLOSE_TO_THRESHOLD
         ]
 
         if close_states:

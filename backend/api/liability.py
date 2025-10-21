@@ -349,12 +349,12 @@ async def trigger_liability_calculation(
         )
 
     # Check if nexus results exist
-    from models.nexus_result import NexusResult, NexusStatus
+    from models.nexus_result import NexusResult, NexusDetermination
     nexus_count = db.query(NexusResult).filter(
         NexusResult.analysis_id == str(analysis_id),
-        NexusResult.nexus_status.in_([
-            NexusStatus.NEXUS_PHYSICAL,
-            NexusStatus.NEXUS_ECONOMIC
+        NexusResult.overall_determination.in_([
+            NexusDetermination.NEXUS_PHYSICAL,
+            NexusDetermination.NEXUS_ECONOMIC
         ])
     ).count()
 
@@ -407,12 +407,12 @@ async def recalculate_liability_with_assumptions(
         )
 
     # Check if nexus results exist
-    from models.nexus_result import NexusResult, NexusStatus
+    from models.nexus_result import NexusResult, NexusDetermination
     nexus_count = db.query(NexusResult).filter(
         NexusResult.analysis_id == str(analysis_id),
-        NexusResult.nexus_status.in_([
-            NexusStatus.NEXUS_PHYSICAL,
-            NexusStatus.NEXUS_ECONOMIC
+        NexusResult.overall_determination.in_([
+            NexusDetermination.NEXUS_PHYSICAL,
+            NexusDetermination.NEXUS_ECONOMIC
         ])
     ).count()
 

@@ -13,7 +13,7 @@ from dateutil.relativedelta import relativedelta
 from models.business_profile import BusinessProfile
 from models.transaction import Transaction
 from models.nexus_rule import NexusRule, ThresholdType, MeasurementPeriod
-from models.nexus_result import NexusResult, NexusStatus, ConfidenceLevel
+from models.nexus_result import NexusResult, NexusDetermination, ConfidenceLevel
 from models.analysis import Analysis
 from services.business_profile_service import business_profile_service
 
@@ -108,19 +108,19 @@ class NexusEngine:
 
             # Determine overall nexus status
             if has_physical_nexus:
-                nexus_status = NexusStatus.NEXUS_PHYSICAL
+                nexus_status = NexusDetermination.NEXUS_PHYSICAL
                 nexus_date = self._determine_physical_nexus_date(
                     business_profile,
                     state
                 )
             elif economic_result['has_nexus']:
-                nexus_status = NexusStatus.NEXUS_ECONOMIC
+                nexus_status = NexusDetermination.NEXUS_ECONOMIC
                 nexus_date = economic_result['nexus_date']
             elif economic_result['close_to_threshold']:
-                nexus_status = NexusStatus.CLOSE_TO_THRESHOLD
+                nexus_status = NexusDetermination.CLOSE_TO_THRESHOLD
                 nexus_date = None
             else:
-                nexus_status = NexusStatus.NO_NEXUS
+                nexus_status = NexusDetermination.NO_NEXUS
                 nexus_date = None
 
             # Calculate confidence level
@@ -132,7 +132,7 @@ class NexusEngine:
 
             # Calculate registration deadline
             registration_deadline = None
-            if nexus_date and nexus_status in [NexusStatus.NEXUS_PHYSICAL, NexusStatus.NEXUS_ECONOMIC]:
+            if nexus_date and nexus_status in [NexusDetermination.NEXUS_PHYSICAL, NexusDetermination.NEXUS_ECONOMIC]:
                 registration_deadline = self._calculate_registration_deadline(
                     nexus_date,
                     rule.registration_threshold_days or 60
@@ -589,7 +589,7 @@ class NexusEngine:
 
     def _generate_recommendation(
         self,
-        nexus_status: NexusStatus,
+        nexus_status: NexusDetermination,
         has_physical_nexus: bool,
         economic_result: Dict,
         registration_deadline: Optional[date]
@@ -606,7 +606,7 @@ class NexusEngine:
         Returns:
             Recommendation string
         """
-        if nexus_status == NexusStatus.NEXUS_PHYSICAL:
+        if nexus_status == NexusDetermination.NEXUS_PHYSICAL:
             if registration_deadline and registration_deadline < date.today():
                 return "URGENT: Physical nexus established. Registration deadline has passed. Consult tax advisor immediately."
             elif registration_deadline:
@@ -614,7 +614,7 @@ class NexusEngine:
             else:
                 return "Physical nexus established. Register for sales tax permit as soon as possible."
 
-        elif nexus_status == NexusStatus.NEXUS_ECONOMIC:
+        elif nexus_status == NexusDetermination.NEXUS_ECONOMIC:
             if registration_deadline and registration_deadline < date.today():
                 return "URGENT: Economic nexus threshold exceeded. Registration deadline has passed. Consult tax advisor immediately."
             elif registration_deadline:
@@ -622,7 +622,7 @@ class NexusEngine:
             else:
                 return "Economic nexus threshold exceeded. Register for sales tax permit."
 
-        elif nexus_status == NexusStatus.CLOSE_TO_THRESHOLD:
+        elif nexus_status == NexusDetermination.CLOSE_TO_THRESHOLD:
             threshold_pct = economic_result.get('threshold_percentage', 0)
             days_until = economic_result.get('days_until_threshold')
 
