@@ -113,12 +113,6 @@ export default function AnalysisDetailPage({ params }: PageProps) {
     return 'badge-neutral';
   };
 
-  const getRiskBadgeClass = (risk: string) => {
-    if (risk === 'high') return 'badge-danger';
-    if (risk === 'medium') return 'badge-warning';
-    return 'badge-neutral';
-  };
-
   return (
     <div>
       {/* Header */}
@@ -282,7 +276,7 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                             Transactions
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
-                            Recommendation
+                            Nexus Type
                           </th>
                         </tr>
                       </thead>
@@ -299,9 +293,17 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                               {formatCurrency(result.total_sales)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                              {result.transaction_count.toLocaleString()}
+                              {result.total_transactions.toLocaleString()}
                             </td>
-                            <td className="px-6 py-4 text-sm text-neutral-600">{result.recommendation}</td>
+                            <td className="px-6 py-4 text-sm text-neutral-600">
+                              {result.has_physical_nexus && result.has_economic_nexus
+                                ? 'Physical & Economic'
+                                : result.has_physical_nexus
+                                ? 'Physical'
+                                : result.has_economic_nexus
+                                ? 'Economic'
+                                : 'None'}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -329,19 +331,10 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                             State
                           </th>
                           <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
-                            Low
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
-                            Mid
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
-                            High
+                            Estimated Liability
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
-                            Risk
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
-                            Recommendation
+                            Filing Frequency
                           </th>
                         </tr>
                       </thead>
@@ -349,21 +342,12 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                         {liabilityEstimates.map((estimate) => (
                           <tr key={estimate.estimate_id} className="hover:bg-neutral-50">
                             <td className="px-6 py-4 whitespace-nowrap font-medium">{estimate.state}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              {formatCurrency(estimate.estimated_liability_low)}
-                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-primary-700">
-                              {formatCurrency(estimate.estimated_liability_mid)}
+                              {formatCurrency(estimate.estimated_liability)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              {formatCurrency(estimate.estimated_liability_high)}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                              {estimate.filing_frequency || 'TBD'}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`badge ${getRiskBadgeClass(estimate.risk_level)}`}>
-                                {estimate.risk_level.toUpperCase()}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-neutral-600">{estimate.recommendation}</td>
                           </tr>
                         ))}
                       </tbody>
