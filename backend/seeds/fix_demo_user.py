@@ -40,8 +40,8 @@ def fix_demo_user():
             first_name='Demo',
             last_name='User',
             role='admin',
-            is_active='true',
-            email_verified='true'
+            is_active=True,
+            email_verified=True
         )
 
         db.add(new_user)
