@@ -16,7 +16,7 @@ from models.tenant import Tenant
 from models.analysis import Analysis, AnalysisStatus
 from models.business_profile import BusinessProfile
 from models.physical_location import PhysicalLocation, LocationType
-from services.auth_service import create_access_token
+from services.auth_service import auth_service
 from services.business_profile_service import business_profile_service
 
 
@@ -91,7 +91,7 @@ def test_user(db_session, test_tenant):
 @pytest.fixture
 def auth_headers(test_user):
     """Create authorization headers."""
-    token = create_access_token({"sub": test_user.email})
+    token = auth_service.create_access_token({"sub": test_user.email})
     return {"Authorization": f"Bearer {token}"}
 
 
