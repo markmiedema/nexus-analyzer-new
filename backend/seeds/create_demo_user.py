@@ -50,8 +50,8 @@ def create_demo_data():
             last_name='User',
             password_hash=AuthService.hash_password('demo123'),
             role=UserRole.ADMIN,
-            is_active='true',
-            email_verified='true'
+            is_active=True,
+            email_verified=True
         )
         db.add(user)
         db.commit()
