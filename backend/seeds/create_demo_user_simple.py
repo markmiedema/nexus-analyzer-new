@@ -29,8 +29,8 @@ def create_demo_data():
             # Create tenant
             tenant_id = str(uuid.uuid4())
             cur.execute(
-                "INSERT INTO tenants (tenant_id, company_name, subdomain, is_active) VALUES (%s, %s, %s, %s)",
-                (tenant_id, 'Demo Company', 'demo', 'true')
+                "INSERT INTO tenants (tenant_id, company_name, subdomain, subscription_plan, status) VALUES (%s, %s, %s, %s, %s)",
+                (tenant_id, 'Demo Company', 'demo', 'free', 'active')
             )
             conn.commit()
             print(f"✓ Created tenant: Demo Company")
