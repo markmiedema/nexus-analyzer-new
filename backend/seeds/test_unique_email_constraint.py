@@ -4,7 +4,7 @@ Test script to verify unique constraint on user email per tenant.
 
 from database import SessionLocal
 from models.user import User, UserRole
-from models.tenant import Tenant
+from models.tenant import Tenant, TenantStatus
 from services.auth_service import AuthService
 import uuid
 
@@ -19,7 +19,7 @@ def test_unique_constraint():
                 tenant_id=str(uuid.uuid4()),
                 company_name='Test Unique Company',
                 subdomain='test-unique',
-                is_active=True
+                status=TenantStatus.ACTIVE
             )
             db.add(test_tenant)
             db.commit()
@@ -35,7 +35,7 @@ def test_unique_constraint():
                 tenant_id=str(uuid.uuid4()),
                 company_name='Test Unique Company 2',
                 subdomain='test-unique2',
-                is_active=True
+                status=TenantStatus.ACTIVE
             )
             db.add(test_tenant2)
             db.commit()
