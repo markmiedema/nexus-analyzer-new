@@ -2,10 +2,9 @@
 Pydantic schemas for authentication endpoints.
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator, field_serializer
+from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional
 from datetime import datetime
-from uuid import UUID
 from models.user import UserRole
 
 
@@ -53,7 +52,11 @@ class TokenData(BaseModel):
 
 
 class UserResponse(BaseModel):
-    """Schema for user data in responses."""
+    """Schema for user data in responses.
+
+    Note: UUIDs are converted to strings in the endpoint handlers
+    before being passed to this schema.
+    """
     user_id: str
     tenant_id: str
     email: str
@@ -67,11 +70,6 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-    @field_serializer('user_id', 'tenant_id')
-    def serialize_uuid(self, value: UUID, _info) -> str:
-        """Convert UUID to string for JSON serialization."""
-        return str(value)
 
 
 class UserUpdate(BaseModel):
