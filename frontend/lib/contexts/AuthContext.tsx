@@ -19,7 +19,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: LoginData) => Promise<void>;
+  login: (credentials: LoginData) => Promise<void>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
 }
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (data: LoginData) => {
+  const login = async (credentials: LoginData) => {
     try {
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
@@ -77,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          username: data.email,
-          password: data.password,
+          username: credentials.email,
+          password: credentials.password,
         }),
       });
 
