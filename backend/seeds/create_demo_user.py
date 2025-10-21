@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import SessionLocal
-from models.tenant import Tenant
+from models.tenant import Tenant, TenantStatus
 from models.user import User, UserRole
 from services.auth_service import AuthService
 import uuid
@@ -34,10 +34,9 @@ def create_demo_data():
         # Create tenant
         if not existing_tenant:
             tenant = Tenant(
-                tenant_id=str(uuid.uuid4()),
                 company_name='Demo Company',
                 subdomain='demo',
-                is_active=True
+                status=TenantStatus.ACTIVE
             )
             db.add(tenant)
             db.commit()
@@ -48,13 +47,13 @@ def create_demo_data():
 
         # Create demo user
         user = User(
-            user_id=str(uuid.uuid4()),
             tenant_id=tenant.tenant_id,
             email='demo@nexusanalyzer.com',
-            full_name='Demo User',
-            hashed_password=AuthService.hash_password('demo123'),
+            first_name='Demo',
+            last_name='User',
+            password_hash=AuthService.hash_password('demo123'),
             role=UserRole.ADMIN,
-            is_active=True
+            is_active="true"
         )
         db.add(user)
         db.commit()
