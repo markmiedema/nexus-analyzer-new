@@ -315,20 +315,32 @@ jobs:
       - name: Wait for services to be healthy
         run: |
           echo "Waiting for all services to be healthy..."
-          timeout 120 bash -c '
+          timeout 180 bash -c '
             while true; do
               # Check if all required services are healthy
               postgres_health=$(docker compose ps postgres --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
               redis_health=$(docker compose ps redis --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
               minio_health=$(docker compose ps minio --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+              backend_health=$(docker compose ps backend --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+              frontend_health=$(docker compose ps frontend --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+              celery_health=$(docker compose ps celery-worker --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
 
               echo "Service health status:"
               echo "  Postgres: $postgres_health"
               echo "  Redis: $redis_health"
               echo "  MinIO: $minio_health"
+              echo "  Backend: $backend_health"
+              echo "  Frontend: $frontend_health"
+              echo "  Celery Worker: $celery_health"
 
-              if [ "$postgres_health" = "healthy" ] && [ "$redis_health" = "healthy" ] && [ "$minio_health" = "healthy" ]; then
-                echo "All infrastructure services are healthy!"
+              # Check if essential services are healthy (celery is optional for tests)
+              if [ "$postgres_health" = "healthy" ] && \
+                 [ "$redis_health" = "healthy" ] && \
+                 [ "$minio_health" = "healthy" ] && \
+                 [ "$backend_health" = "healthy" ]; then
+                echo ""
+                echo "All essential services are healthy!"
+                echo "Note: Celery worker status is: $celery_health (not required for integration tests)"
                 break
               fi
 
@@ -338,7 +350,15 @@ jobs:
           ' || {
             echo "Timeout waiting for services. Current status:"
             docker compose ps
-            docker compose logs
+            echo ""
+            echo "=== Backend Logs ==="
+            docker compose logs backend | tail -100
+            echo ""
+            echo "=== Celery Worker Logs ==="
+            docker compose logs celery-worker | tail -50
+            echo ""
+            echo "=== Database Logs ==="
+            docker compose logs postgres | tail -30
             exit 1
           }
 
