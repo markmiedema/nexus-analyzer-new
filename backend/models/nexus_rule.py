@@ -31,6 +31,9 @@ class MeasurementPeriod(str, enum.Enum):
     CALENDAR_YEAR = "calendar_year"  # Current calendar year
     ROLLING_12_MONTHS = "rolling_12_months"  # Previous 12 months
     PREVIOUS_CALENDAR_YEAR = "previous_calendar_year"  # Last year
+    CURRENT_OR_PRIOR_YEAR = "current_or_prior_year"  # Current or previous calendar year
+    PRIOR_CALENDAR_YEAR = "prior_calendar_year"  # Prior calendar year
+    TRAILING_4_QUARTERS = "trailing_4_quarters"  # Last 4 quarters
 
 
 class NexusRule(Base):
@@ -48,7 +51,8 @@ class NexusRule(Base):
     )
 
     # State and nexus type
-    state = Column(String(2), nullable=False, index=True)  # Two-letter state code
+    state_code = Column(String(2), nullable=False, index=True)  # Two-letter state code
+    state_name = Column(String(50), nullable=True)  # Full state name
     nexus_type = Column(
         SQLEnum(NexusType),
         nullable=False
@@ -86,4 +90,4 @@ class NexusRule(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
-        return f"<NexusRule {self.state} {self.nexus_type}>"
+        return f"<NexusRule {self.state_code} {self.nexus_type}>"
