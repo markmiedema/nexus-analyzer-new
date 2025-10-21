@@ -77,8 +77,8 @@ async def register(
         first_name=user_data.first_name,
         last_name=user_data.last_name,
         role=UserRole.VIEWER,  # Default role
-        is_active="true",
-        email_verified="false"
+        is_active=True,
+        email_verified=False
     )
 
     db.add(new_user)
@@ -93,7 +93,7 @@ async def register(
         resource_type="user",
         resource_id=new_user.user_id,
         ip_address=request.client.host if request.client else None,
-        success="true",
+        success=True,
         description=f"User {new_user.email} registered"
     )
     db.add(audit_log)
@@ -157,7 +157,7 @@ async def login(
             action="login_failed",
             resource_type="user",
             ip_address=request.client.host if request.client else None,
-            success="false",
+            success=False,
             description=f"Failed login attempt for {credentials.email}",
             error_message="Invalid credentials"
         )
@@ -179,7 +179,7 @@ async def login(
             resource_type="user",
             resource_id=user.user_id,
             ip_address=request.client.host if request.client else None,
-            success="false",
+            success=False,
             description=f"Failed login attempt for {credentials.email}",
             error_message="Invalid password"
         )
@@ -218,7 +218,7 @@ async def login(
         resource_type="user",
         resource_id=user.user_id,
         ip_address=request.client.host if request.client else None,
-        success="true",
+        success=True,
         description=f"User {user.email} logged in"
     )
     db.add(audit_log)
@@ -272,7 +272,7 @@ async def logout(
         resource_type="user",
         resource_id=current_user.user_id,
         ip_address=request.client.host if request.client else None,
-        success="true",
+        success=True,
         description=f"User {current_user.email} logged out"
     )
     db.add(audit_log)
@@ -317,7 +317,7 @@ async def change_password(
         action="password_changed",
         resource_type="user",
         resource_id=current_user.user_id,
-        success="true",
+        success=True,
         description=f"User {current_user.email} changed password"
     )
     db.add(audit_log)
