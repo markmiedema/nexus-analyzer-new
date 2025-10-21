@@ -18,6 +18,14 @@ class NexusDetermination(str, enum.Enum):
     CLOSE_TO_THRESHOLD = "close_to_threshold"  # Within 10% of threshold
 
 
+class NexusStatus(str, enum.Enum):
+    """Nexus status - distinguishes between physical and economic nexus."""
+    NEXUS_PHYSICAL = "nexus_physical"
+    NEXUS_ECONOMIC = "nexus_economic"
+    CLOSE_TO_THRESHOLD = "close_to_threshold"
+    NO_NEXUS = "no_nexus"
+
+
 class ConfidenceLevel(str, enum.Enum):
     """Confidence in nexus determination."""
     HIGH = "high"  # Clear threshold met/not met
@@ -53,6 +61,11 @@ class NexusResult(Base):
     # Nexus determination
     has_physical_nexus = Column(Boolean, default=False, nullable=False)
     has_economic_nexus = Column(Boolean, default=False, nullable=False)
+    nexus_status = Column(
+        SQLEnum(NexusStatus),
+        nullable=False,
+        index=True
+    )
     overall_determination = Column(
         SQLEnum(NexusDetermination),
         nullable=False,
