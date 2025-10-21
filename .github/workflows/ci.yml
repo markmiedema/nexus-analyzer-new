@@ -269,6 +269,7 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
+          target: development
           push: false
           tags: nexus-analyzer-frontend:test
           cache-from: type=gha
@@ -293,7 +294,7 @@ jobs:
           POSTGRES_USER=nexus_user
           POSTGRES_PASSWORD=nexus_password
           POSTGRES_DB=nexus_db
-          DATABASE_URL=postgresql://nexus_user:nexus_password@db:5432/nexus_db
+          DATABASE_URL=postgresql://nexus_user:nexus_password@postgres:5432/nexus_db
 
           # Security
           SECRET_KEY=test-secret-key-for-ci-cd-integration-testing-only
@@ -310,20 +311,56 @@ jobs:
       - name: Start services with Docker Compose
         run: |
           docker compose up -d
-          sleep 10
 
       - name: Wait for services to be healthy
         run: |
-          timeout 60 bash -c 'until docker compose ps | grep -q "healthy"; do sleep 2; done' || true
+          echo "Waiting for all services to be healthy..."
+          timeout 120 bash -c '
+            while true; do
+              # Check if all required services are healthy
+              postgres_health=$(docker compose ps postgres --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+              redis_health=$(docker compose ps redis --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+              minio_health=$(docker compose ps minio --format json | jq -r ".[0].Health" 2>/dev/null || echo "starting")
+
+              echo "Service health status:"
+              echo "  Postgres: $postgres_health"
+              echo "  Redis: $redis_health"
+              echo "  MinIO: $minio_health"
+
+              if [ "$postgres_health" = "healthy" ] && [ "$redis_health" = "healthy" ] && [ "$minio_health" = "healthy" ]; then
+                echo "All infrastructure services are healthy!"
+                break
+              fi
+
+              echo "Waiting for services to become healthy..."
+              sleep 5
+            done
+          ' || {
+            echo "Timeout waiting for services. Current status:"
+            docker compose ps
+            docker compose logs
+            exit 1
+          }
 
       - name: Check service status
         run: |
           docker compose ps
           docker compose logs backend
 
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          docker compose exec -T backend alembic upgrade head || {
+            echo "Migration failed. Checking backend logs:"
+            docker compose logs backend
+            exit 1
+          }
+
       - name: Run integration tests
         run: |
-          docker compose exec -T backend pytest tests/ -v -m integration || true
+          # Run all backend tests in the integration environment
+          # Removed -m integration filter since tests may not have markers yet
+          docker compose exec -T backend pytest tests/ -v || true
         continue-on-error: true
 
       - name: Cleanup
