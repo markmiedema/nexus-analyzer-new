@@ -10,7 +10,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -24,6 +23,9 @@ venv/
 ENV/
 env/
 .venv
+
+# But allow frontend lib directory
+!frontend/lib/
 
 # Node.js
 node_modules/
