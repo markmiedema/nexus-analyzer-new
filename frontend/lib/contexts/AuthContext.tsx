@@ -10,11 +10,16 @@ interface User {
   tenant_id?: string;
 }
 
+interface LoginData {
+  email: string;
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (data: LoginData) => Promise<void>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
 }
@@ -64,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (data: LoginData) => {
     try {
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
@@ -72,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          username: email,
-          password: password,
+          username: data.email,
+          password: data.password,
         }),
       });
 
