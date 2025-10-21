@@ -26,11 +26,15 @@ def create_demo_data():
         tenant = cur.fetchone()
 
         if not tenant:
-            # Create tenant - let defaults handle subscription_plan and status
+            # Create tenant with explicit enum values
             tenant_id = str(uuid.uuid4())
+            # Cast strings to enum types using PostgreSQL syntax
             cur.execute(
-                "INSERT INTO tenants (tenant_id, company_name, subdomain) VALUES (%s, %s, %s)",
-                (tenant_id, 'Demo Company', 'demo')
+                """
+                INSERT INTO tenants (tenant_id, company_name, subdomain, subscription_plan, status)
+                VALUES (%s, %s, %s, %s::subscriptionplan, %s::tenantstatus)
+                """,
+                (tenant_id, 'Demo Company', 'demo', 'free', 'trial')
             )
             conn.commit()
             print(f"✓ Created tenant: Demo Company")
