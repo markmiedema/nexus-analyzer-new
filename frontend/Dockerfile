@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -38,7 +38,7 @@ ENV NODE_ENV=development \
 COPY package.json package-lock.json* ./
 
 # Install all dependencies (including dev)
-RUN npm ci
+RUN npm install
 
 # Copy application files
 COPY . .
