@@ -7,23 +7,18 @@ from psycopg2 import sql
 import uuid
 import os
 
-# Get database connection details from environment
-DB_USER = os.getenv('POSTGRES_USER', 'nexus_admin')
-DB_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'nexus_password')
-DB_NAME = os.getenv('POSTGRES_DB', 'nexus_analyzer')
-DB_HOST = 'postgres'
-DB_PORT = '5432'
+# Get database URL from environment (already set by docker-compose)
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable not set")
+
+print(f"Connecting to database using DATABASE_URL...")
 
 def create_demo_data():
     try:
-        # Connect to database
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD
-        )
+        # Connect to database using the full connection string
+        conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         # Check if demo tenant exists
