@@ -2,7 +2,7 @@
 Audit Log model for tracking all system actions.
 """
 
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Index
+from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -54,7 +54,7 @@ class AuditLog(Base):
     metadata = Column(JSONB, nullable=True)  # Additional flexible data
 
     # Result
-    success = Column(String(10), default="true", nullable=False, index=True)
+    success = Column(Boolean, default=True, nullable=False, index=True)
     error_message = Column(Text, nullable=True)
 
     # Timestamp

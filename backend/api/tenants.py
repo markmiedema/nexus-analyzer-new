@@ -89,7 +89,7 @@ async def create_tenant(
         resource_type="tenant",
         resource_id=new_tenant.tenant_id,
         ip_address=request.client.host if request.client else None,
-        success="true",
+        success=True,
         description=f"Tenant {new_tenant.company_name} created"
     )
     db.add(audit_log)

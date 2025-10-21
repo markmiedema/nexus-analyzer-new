@@ -76,8 +76,8 @@ def test_user(db_session, test_tenant):
         first_name="Test",
         last_name="User",
         role=UserRole.ADMIN,
-        is_active="true",
-        email_verified="false"
+        is_active=True,
+        email_verified=False
     )
     db_session.add(user)
     db_session.commit()
