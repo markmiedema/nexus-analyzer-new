@@ -5,7 +5,7 @@ Create demo tenant and user for development/testing.
 from database import SessionLocal
 from models.tenant import Tenant
 from models.user import User, UserRole
-from auth_utils import get_password_hash
+from services.auth_service import AuthService
 import uuid
 
 def create_demo_data():
@@ -46,7 +46,7 @@ def create_demo_data():
             tenant_id=tenant.tenant_id,
             email='demo@nexusanalyzer.com',
             full_name='Demo User',
-            hashed_password=get_password_hash('demo123'),
+            hashed_password=AuthService.hash_password('demo123'),
             role=UserRole.ADMIN,
             is_active=True
         )
