@@ -125,10 +125,10 @@ export default function AnalysisDetailPage({ params }: PageProps) {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900">{analysis.client_name}</h1>
+            <h1 className="text-3xl font-bold text-neutral-900">Sales Tax Nexus Analysis</h1>
             <p className="mt-1 text-neutral-600">
-              Analysis Period: {new Date(analysis.period_start).toLocaleDateString()} -{' '}
-              {new Date(analysis.period_end).toLocaleDateString()}
+              Created: {new Date(analysis.created_at).toLocaleDateString()}
+              {analysis.completed_at && ` • Completed: ${new Date(analysis.completed_at).toLocaleDateString()}`}
             </p>
           </div>
           <Link href="/dashboard" className="btn btn-secondary">
@@ -140,7 +140,7 @@ export default function AnalysisDetailPage({ params }: PageProps) {
       {/* Status Tracker */}
       {!isCompleted && (
         <div className="mb-6">
-          <AnalysisStatusTracker status={analysis.status} errorMessage={analysis.error_message} />
+          <AnalysisStatusTracker status={analysis.status} />
         </div>
       )}
 
