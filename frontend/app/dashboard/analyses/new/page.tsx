@@ -56,7 +56,7 @@ export default function NewAnalysisPage() {
   // Upload CSV mutation
   const uploadCsvMutation = useMutation({
     mutationFn: ({ analysisId, file }: { analysisId: string; file: File }) =>
-      analysesApi.uploadCsv(analysisId, file),
+      analysesApi.uploadCSV(analysisId, file),
     onSuccess: () => {
       setCurrentStep('profile');
       setError('');
