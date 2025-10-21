@@ -74,11 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`${apiUrl}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          username: credentials.email,
+        body: JSON.stringify({
+          email: credentials.email,
           password: credentials.password,
+          tenant_subdomain: 'demo', // Default tenant for demo
         }),
       });
 
