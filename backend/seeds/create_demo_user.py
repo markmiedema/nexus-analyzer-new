@@ -2,6 +2,12 @@
 Create demo tenant and user for development/testing.
 """
 
+import sys
+import os
+
+# Add parent directory to path so we can import backend modules
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from database import SessionLocal
 from models.tenant import Tenant
 from models.user import User, UserRole
