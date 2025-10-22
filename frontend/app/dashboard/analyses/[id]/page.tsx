@@ -27,22 +27,15 @@ export default function AnalysisDetailPage({ params }: PageProps) {
   // Fetch analysis
   const { data: analysis, isLoading: analysisLoading } = useQuery({
     queryKey: ['analysis', analysisId],
-    queryFn: () => analysesApi.getById(analysisId),
+    queryFn: () => analysesApi.get(analysisId),
     enabled: !!analysisId,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       // Refetch every 5 seconds if processing
-      return status && ['uploading_csv', 'processing_csv', 'processing_nexus'].includes(status)
+      return status && ['processing', 'pending'].includes(status)
         ? 5000
         : false;
     },
-  });
-
-  // Fetch nexus summary
-  const { data: nexusSummary } = useQuery({
-    queryKey: ['nexus-summary', analysisId],
-    queryFn: () => nexusApi.getSummary(analysisId),
-    enabled: !!analysisId && analysis?.status === 'completed',
   });
 
   // Fetch nexus results
@@ -52,19 +45,29 @@ export default function AnalysisDetailPage({ params }: PageProps) {
     enabled: !!analysisId && analysis?.status === 'completed',
   });
 
-  // Fetch liability summary
-  const { data: liabilitySummary } = useQuery({
-    queryKey: ['liability-summary', analysisId],
-    queryFn: () => liabilityApi.getSummary(analysisId),
-    enabled: !!analysisId && analysis?.status === 'completed',
-  });
-
   // Fetch liability estimates
   const { data: liabilityEstimates } = useQuery({
     queryKey: ['liability-estimates', analysisId],
     queryFn: () => liabilityApi.getEstimates(analysisId),
     enabled: !!analysisId && analysis?.status === 'completed',
   });
+
+  // Compute nexus summary from results
+  const nexusSummary = nexusResults ? {
+    total_nexus_states: nexusResults.length,
+    physical_nexus_count: nexusResults.filter(r => r.has_physical_nexus).length,
+    economic_nexus_count: nexusResults.filter(r => r.has_economic_nexus).length,
+  } : null;
+
+  // Compute liability summary from estimates
+  const liabilitySummary = liabilityEstimates ? {
+    total_liability_mid: liabilityEstimates.reduce((sum, est) => sum + (est.estimated_liability || 0), 0),
+    high_risk_count: liabilityEstimates.filter(est => est.estimated_liability > 10000).length,
+    top_5_states: liabilityEstimates
+      .sort((a, b) => (b.estimated_liability || 0) - (a.estimated_liability || 0))
+      .slice(0, 5)
+      .map(est => ({ state: est.state, liability: est.estimated_liability || 0 })),
+  } : null;
 
   if (!analysisId) {
     return (
@@ -110,22 +113,16 @@ export default function AnalysisDetailPage({ params }: PageProps) {
     return 'badge-neutral';
   };
 
-  const getRiskBadgeClass = (risk: string) => {
-    if (risk === 'high') return 'badge-danger';
-    if (risk === 'medium') return 'badge-warning';
-    return 'badge-neutral';
-  };
-
   return (
     <div>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900">{analysis.client_name}</h1>
+            <h1 className="text-3xl font-bold text-neutral-900">Sales Tax Nexus Analysis</h1>
             <p className="mt-1 text-neutral-600">
-              Analysis Period: {new Date(analysis.period_start).toLocaleDateString()} -{' '}
-              {new Date(analysis.period_end).toLocaleDateString()}
+              Created: {new Date(analysis.created_at).toLocaleDateString()}
+              {analysis.completed_at && ` • Completed: ${new Date(analysis.completed_at).toLocaleDateString()}`}
             </p>
           </div>
           <Link href="/dashboard" className="btn btn-secondary">
@@ -137,7 +134,7 @@ export default function AnalysisDetailPage({ params }: PageProps) {
       {/* Status Tracker */}
       {!isCompleted && (
         <div className="mb-6">
-          <AnalysisStatusTracker status={analysis.status} errorMessage={analysis.error_message} />
+          <AnalysisStatusTracker status={analysis.status} />
         </div>
       )}
 
@@ -279,7 +276,7 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                             Transactions
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
-                            Recommendation
+                            Nexus Type
                           </th>
                         </tr>
                       </thead>
@@ -296,9 +293,17 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                               {formatCurrency(result.total_sales)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                              {result.transaction_count.toLocaleString()}
+                              {result.total_transactions.toLocaleString()}
                             </td>
-                            <td className="px-6 py-4 text-sm text-neutral-600">{result.recommendation}</td>
+                            <td className="px-6 py-4 text-sm text-neutral-600">
+                              {result.has_physical_nexus && result.has_economic_nexus
+                                ? 'Physical & Economic'
+                                : result.has_physical_nexus
+                                ? 'Physical'
+                                : result.has_economic_nexus
+                                ? 'Economic'
+                                : 'None'}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -326,19 +331,10 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                             State
                           </th>
                           <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
-                            Low
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
-                            Mid
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
-                            High
+                            Estimated Liability
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
-                            Risk
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
-                            Recommendation
+                            Filing Frequency
                           </th>
                         </tr>
                       </thead>
@@ -346,21 +342,12 @@ export default function AnalysisDetailPage({ params }: PageProps) {
                         {liabilityEstimates.map((estimate) => (
                           <tr key={estimate.estimate_id} className="hover:bg-neutral-50">
                             <td className="px-6 py-4 whitespace-nowrap font-medium">{estimate.state}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              {formatCurrency(estimate.estimated_liability_low)}
-                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-primary-700">
-                              {formatCurrency(estimate.estimated_liability_mid)}
+                              {formatCurrency(estimate.estimated_liability)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              {formatCurrency(estimate.estimated_liability_high)}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                              {estimate.filing_frequency || 'TBD'}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`badge ${getRiskBadgeClass(estimate.risk_level)}`}>
-                                {estimate.risk_level.toUpperCase()}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-neutral-600">{estimate.recommendation}</td>
                           </tr>
                         ))}
                       </tbody>

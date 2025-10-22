@@ -1,0 +1,43 @@
+# YAML linting configuration
+
+extends: default
+
+rules:
+  # Line length (allow longer lines for readability)
+  line-length:
+    max: 120
+    level: warning
+
+  # Indentation
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Comments
+  comments:
+    min-spaces-from-content: 1
+
+  # Document start (allow files without ---)
+  document-start:
+    present: false
+
+  # Trailing spaces
+  trailing-spaces: enable
+
+  # Empty lines
+  empty-lines:
+    max: 2
+
+  # Key duplicates
+  key-duplicates: enable
+
+  # Truthy values (allow yes/no, true/false, on/off)
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+
+ignore: |
+  frontend/
+  node_modules/
+  .venv/
+  venv/
+  htmlcov/

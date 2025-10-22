@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -36,12 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-  // Check authentication status on mount
-  useEffect(() => {
-    refreshAuth();
-  }, []);
-
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
       if (!token) {
@@ -72,7 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [apiUrl]);
+
+  // Check authentication status on mount
+  useEffect(() => {
+    refreshAuth();
+  }, [refreshAuth]);
 
   const login = async (credentials: LoginData) => {
     try {

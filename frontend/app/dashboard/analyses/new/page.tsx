@@ -42,7 +42,7 @@ export default function NewAnalysisPage() {
 
   // Create analysis mutation
   const createAnalysisMutation = useMutation({
-    mutationFn: analysesApi.create,
+    mutationFn: () => analysesApi.create({ business_profile_id: '' }),
     onSuccess: (data) => {
       setAnalysisId(data.analysis_id);
       setCurrentStep('csv');
@@ -56,7 +56,7 @@ export default function NewAnalysisPage() {
   // Upload CSV mutation
   const uploadCsvMutation = useMutation({
     mutationFn: ({ analysisId, file }: { analysisId: string; file: File }) =>
-      analysesApi.uploadCsv(analysisId, file),
+      analysesApi.uploadCSV(analysisId, file),
     onSuccess: () => {
       setCurrentStep('profile');
       setError('');
@@ -69,11 +69,10 @@ export default function NewAnalysisPage() {
   // Create business profile mutation
   const createProfileMutation = useMutation({
     mutationFn: ({ analysisId, data }: { analysisId: string; data: BusinessProfileFormData }) =>
-      businessProfileApi.createOrUpdate(analysisId, {
-        ...data,
-        marketplace_names: data.marketplace_names?.[0]
-          ? (data.marketplace_names[0] as string).split(',').map((s) => s.trim())
-          : undefined,
+      businessProfileApi.create({
+        business_name: data.legal_business_name || data.doing_business_as || '',
+        business_type: data.business_structure,
+        primary_state: data.locations?.[0]?.state_code,
       }),
     onSuccess: () => {
       setCurrentStep('processing');
@@ -89,7 +88,9 @@ export default function NewAnalysisPage() {
 
   // Step handlers
   const onBasicInfoSubmit = (data: BasicInfoFormData) => {
-    createAnalysisMutation.mutate(data);
+    // Note: Basic info (client_name, period_start, period_end) is not used by the API
+    // Analysis is created with minimal data, additional info can be added later if needed
+    createAnalysisMutation.mutate();
   };
 
   const onFileSelect = (file: File) => {

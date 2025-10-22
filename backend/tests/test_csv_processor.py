@@ -21,7 +21,7 @@ from models.tenant import Tenant
 from models.analysis import Analysis, AnalysisStatus
 from models.transaction import Transaction
 from services.csv_processor import csv_processor
-from services.auth_service import create_access_token
+from services.auth_service import auth_service
 
 
 # In-memory SQLite database for testing
@@ -95,7 +95,7 @@ def test_user(db_session, test_tenant):
 @pytest.fixture
 def auth_token(test_user):
     """Generate auth token for test user."""
-    return create_access_token({"sub": test_user.email})
+    return auth_service.create_access_token({"sub": test_user.email})
 
 
 @pytest.fixture

@@ -25,7 +25,7 @@ export function ReportViewer({ analysisId }: ReportViewerProps) {
 
   // Generate summary report
   const generateSummaryMutation = useMutation({
-    mutationFn: () => reportsApi.generateSummary(analysisId),
+    mutationFn: () => reportsApi.generate(analysisId, 'summary'),
     onSuccess: () => {
       setError('');
       // Refetch reports after a delay to allow generation to complete
@@ -40,7 +40,7 @@ export function ReportViewer({ analysisId }: ReportViewerProps) {
 
   // Generate detailed report
   const generateDetailedMutation = useMutation({
-    mutationFn: () => reportsApi.generateDetailed(analysisId),
+    mutationFn: () => reportsApi.generate(analysisId, 'detailed'),
     onSuccess: () => {
       setError('');
       // Refetch reports after a delay to allow generation to complete
@@ -73,11 +73,6 @@ export function ReportViewer({ analysisId }: ReportViewerProps) {
     }
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -167,7 +162,7 @@ export function ReportViewer({ analysisId }: ReportViewerProps) {
                           : 'Detailed Analysis Report'}
                       </div>
                       <div className="text-sm text-neutral-600 mt-1">
-                        Generated: {formatDate(report.created_at)} • Size: {formatFileSize(report.file_size)}
+                        Generated: {formatDate(report.created_at)}
                       </div>
                     </div>
                   </div>
