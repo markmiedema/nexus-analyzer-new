@@ -55,14 +55,6 @@ export interface Report {
   created_at: string;
 }
 
-// Helper function to get auth token
-function getAuthToken(): string | null {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('access_token');
-  }
-  return null;
-}
-
 // Helper function to handle API errors
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -82,19 +74,15 @@ async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include', // Send httpOnly cookies with requests
   });
 
   if (!response.ok) {
@@ -132,15 +120,9 @@ export const analysesApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = getAuthToken();
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(`${API_URL}/analyses/${analysisId}/upload`, {
       method: 'POST',
-      headers,
+      credentials: 'include', // Send httpOnly cookies
       body: formData,
     });
 
@@ -240,14 +222,8 @@ export const reportsApi = {
   },
 
   download: async (reportId: string): Promise<Blob> => {
-    const token = getAuthToken();
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(`${API_URL}/reports/${reportId}/download`, {
-      headers,
+      credentials: 'include', // Send httpOnly cookies
     });
 
     if (!response.ok) {
