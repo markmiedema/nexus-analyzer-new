@@ -114,20 +114,42 @@ export default function AnalysisDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
+      <div className="mb-8">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900 mb-4 transition-colors"
+        >
+          <span className="mr-2">←</span>
+          Back to Dashboard
+        </Link>
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900">Sales Tax Nexus Analysis</h1>
-            <p className="mt-1 text-neutral-600">
-              Created: {new Date(analysis.created_at).toLocaleDateString()}
-              {analysis.completed_at && ` • Completed: ${new Date(analysis.completed_at).toLocaleDateString()}`}
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">📊</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-neutral-900">Nexus Analysis Report</h1>
+                <p className="text-sm text-neutral-500 mt-1">
+                  Analysis ID: {analysisId.slice(0, 8)}...
+                </p>
+              </div>
+            </div>
+            <p className="text-neutral-600 flex items-center space-x-4 mt-3">
+              <span className="flex items-center">
+                <span className="text-lg mr-1">📅</span>
+                Created {new Date(analysis.created_at).toLocaleDateString()}
+              </span>
+              {analysis.completed_at && (
+                <span className="flex items-center">
+                  <span className="text-lg mr-1">✅</span>
+                  Completed {new Date(analysis.completed_at).toLocaleDateString()}
+                </span>
+              )}
             </p>
           </div>
-          <Link href="/dashboard" className="btn btn-secondary">
-            ← Back to Dashboard
-          </Link>
         </div>
       </div>
 
@@ -172,44 +194,66 @@ export default function AnalysisDetailPage({ params }: PageProps) {
             {activeTab === 'overview' && (
               <>
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="card">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
+                  <div className="card hover:shadow-xl transition-all duration-300 group">
                     <div className="card-body">
-                      <div className="text-sm font-medium text-neutral-500 uppercase mb-2">
-                        States with Nexus
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
+                          States with Nexus
+                        </div>
+                        <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span className="text-2xl">🗺️</span>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold text-primary-700">
+                      <div className="text-4xl font-bold text-primary-700 mb-2">
                         {nexusSummary?.total_nexus_states || 0}
                       </div>
                       {nexusSummary && (
-                        <div className="text-sm text-neutral-600 mt-2">
-                          {nexusSummary.physical_nexus_count} Physical • {nexusSummary.economic_nexus_count} Economic
+                        <div className="text-sm text-neutral-600 flex items-center space-x-3">
+                          <span className="flex items-center">
+                            <span className="w-2 h-2 bg-primary-500 rounded-full mr-1.5"></span>
+                            {nexusSummary.physical_nexus_count} Physical
+                          </span>
+                          <span className="flex items-center">
+                            <span className="w-2 h-2 bg-secondary-500 rounded-full mr-1.5"></span>
+                            {nexusSummary.economic_nexus_count} Economic
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="card">
+                  <div className="card hover:shadow-xl transition-all duration-300 group">
                     <div className="card-body">
-                      <div className="text-sm font-medium text-neutral-500 uppercase mb-2">
-                        Estimated Liability
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
+                          Estimated Liability
+                        </div>
+                        <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span className="text-2xl">💰</span>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold text-warning-700">
+                      <div className="text-4xl font-bold text-warning-700 mb-2">
                         {liabilitySummary ? formatCurrency(liabilitySummary.total_liability_mid) : '$0'}
                       </div>
-                      <div className="text-sm text-neutral-600 mt-2">Mid-range estimate</div>
+                      <div className="text-sm text-neutral-600">Mid-range estimate</div>
                     </div>
                   </div>
 
-                  <div className="card">
+                  <div className="card hover:shadow-xl transition-all duration-300 group">
                     <div className="card-body">
-                      <div className="text-sm font-medium text-neutral-500 uppercase mb-2">
-                        High Risk States
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-medium text-neutral-500 uppercase tracking-wide">
+                          High Risk States
+                        </div>
+                        <div className="w-12 h-12 bg-danger-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <span className="text-2xl">⚠️</span>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold text-danger-700">
+                      <div className="text-4xl font-bold text-danger-700 mb-2">
                         {liabilitySummary?.high_risk_count || 0}
                       </div>
-                      <div className="text-sm text-neutral-600 mt-2">Require immediate attention</div>
+                      <div className="text-sm text-neutral-600">Require immediate attention</div>
                     </div>
                   </div>
                 </div>
