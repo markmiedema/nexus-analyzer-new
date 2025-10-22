@@ -1,7 +1,7 @@
 # Multi-stage build for Next.js
 
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 
 # Copy package files
@@ -11,7 +11,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -27,7 +27,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # RUN npm run build
 
 # Stage 3: Development
-FROM node:20-alpine AS development
+FROM node:25-alpine AS development
 WORKDIR /app
 
 # Set environment variables
