@@ -183,7 +183,7 @@ export default function DashboardPage() {
                 Ready to get started?
               </h3>
               <p className="text-neutral-600 mb-8 max-w-md mx-auto">
-                Upload your sales data and we'll analyze your nexus obligations across all 50 states automatically.
+                Upload your sales data and we&apos;ll analyze your nexus obligations across all 50 states automatically.
               </p>
               <Link
                 href="/dashboard/analyses/new"
