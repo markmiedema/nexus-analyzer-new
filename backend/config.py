@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator, ValidationInfo
 from typing import Optional
 import sys
+import os
 
 
 class Settings(BaseSettings):
@@ -111,20 +112,26 @@ class Settings(BaseSettings):
             "your-secret-key-min-32-chars-change-in-production",
         ]
 
+        # Check environment - suppress warnings in test/CI
+        environment = info.data.get('ENVIRONMENT', 'development')
+        is_ci = os.getenv('CI', 'false').lower() == 'true'
+        suppress_warnings = environment == 'test' or is_ci
+
         v_lower = v.lower()
         for weak in weak_keys:
             if weak in v_lower:
-                print(
-                    f"\n{'='*70}\n"
-                    f"WARNING: SECRET_KEY appears to contain weak/example text: '{weak}'\n"
-                    f"This is a SECURITY RISK in production!\n"
-                    f"Generate a secure key with:\n"
-                    f"  python backend/scripts/generate_secret_key.py\n"
-                    f"{'='*70}\n",
-                    file=sys.stderr
-                )
+                # Only show warning if not in test/CI environment
+                if not suppress_warnings:
+                    print(
+                        f"\n{'='*70}\n"
+                        f"WARNING: SECRET_KEY appears to contain weak/example text: '{weak}'\n"
+                        f"This is a SECURITY RISK in production!\n"
+                        f"Generate a secure key with:\n"
+                        f"  python backend/scripts/generate_secret_key.py\n"
+                        f"{'='*70}\n",
+                        file=sys.stderr
+                    )
                 # In production, fail hard
-                environment = info.data.get('ENVIRONMENT', 'development')
                 if environment == 'production':
                     raise ValueError(
                         f"SECRET_KEY contains weak/example text in production environment. "
@@ -133,7 +140,7 @@ class Settings(BaseSettings):
 
         # Check entropy (should have variety of characters)
         unique_chars = len(set(v))
-        if unique_chars < 16:
+        if unique_chars < 16 and not suppress_warnings:
             print(
                 f"\n{'='*70}\n"
                 f"WARNING: SECRET_KEY has low entropy (only {unique_chars} unique characters)\n"
