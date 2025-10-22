@@ -15,13 +15,16 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         access_token: JWT access token
         refresh_token: JWT refresh token
     """
+    # Use SameSite=none for development to allow cross-origin cookies (localhost:3000 -> localhost:8000)
+    samesite = "none" if settings.ENVIRONMENT == "development" else settings.COOKIE_SAMESITE
+
     # Set access token cookie
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,  # Prevents JavaScript access (XSS protection)
         secure=settings.COOKIE_SECURE,  # Only send over HTTPS in production
-        samesite=settings.COOKIE_SAMESITE,  # CSRF protection
+        samesite=samesite,  # CSRF protection
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # seconds
         domain=settings.COOKIE_DOMAIN,
         path="/",
@@ -33,7 +36,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         value=refresh_token,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite=settings.COOKIE_SAMESITE,
+        samesite=samesite,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # seconds
         domain=settings.COOKIE_DOMAIN,
         path="/api/v1/auth/refresh",  # Only sent to refresh endpoint
