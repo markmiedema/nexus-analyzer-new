@@ -25,7 +25,7 @@ slowapi==0.1.9
 pandas==2.2.3
 openpyxl==3.1.5
 chardet==5.2.0
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
 
 # AWS/S3
 boto3==1.35.36
