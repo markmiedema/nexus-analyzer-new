@@ -2,6 +2,6 @@
 -r requirements.txt
 
 # Additional dev tools
-ipython==8.27.0
+ipython==9.6.0
 ipdb==0.13.13
 pre-commit==3.8.0
