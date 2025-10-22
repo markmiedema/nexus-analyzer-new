@@ -38,17 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshAuth = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
       const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Send httpOnly cookies
       });
 
       if (response.ok) {
@@ -57,8 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userData.full_name = `${userData.first_name} ${userData.last_name}`;
         setUser(userData);
       } else {
-        // Token is invalid
-        localStorage.removeItem('access_token');
+        // Not authenticated
         setUser(null);
       }
     } catch (error) {
@@ -81,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send and receive httpOnly cookies
         body: JSON.stringify({
           email: credentials.email,
           password: credentials.password,
@@ -93,11 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.detail || 'Login failed');
       }
 
-      const data = await response.json();
-      localStorage.setItem('access_token', data.access_token);
+      // Login successful, cookies are set automatically
+      const userData = await response.json();
 
-      // Fetch user data
-      await refreshAuth();
+      // Add full_name for convenience
+      userData.full_name = `${userData.first_name} ${userData.last_name}`;
+      setUser(userData);
 
       router.push('/dashboard');
     } catch (error) {
@@ -106,10 +98,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      // Call backend logout to clear cookies
+      await fetch(`${apiUrl}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   return (
