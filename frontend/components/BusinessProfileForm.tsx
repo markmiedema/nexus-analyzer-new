@@ -126,11 +126,13 @@ export function BusinessProfileForm({
               className="mt-1 input"
             >
               <option value="">Select structure</option>
-              <option value="sole_proprietorship">Sole Proprietorship</option>
-              <option value="llc">LLC</option>
-              <option value="s_corp">S Corporation</option>
-              <option value="c_corp">C Corporation</option>
-              <option value="partnership">Partnership</option>
+              <option value="Sole Proprietorship">Sole Proprietorship</option>
+              <option value="LLC">LLC</option>
+              <option value="S-Corp">S Corporation</option>
+              <option value="C-Corp">C Corporation</option>
+              <option value="Partnership">Partnership</option>
+              <option value="Non-Profit">Non-Profit</option>
+              <option value="Other">Other</option>
             </select>
           </div>
         </div>
