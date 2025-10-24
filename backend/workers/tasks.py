@@ -10,6 +10,7 @@ from services.s3_service import s3_service
 import logging
 import json
 import io
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +187,7 @@ def run_nexus_determination(self, analysis_id: str):
 
         # Update analysis status
         analysis.status = AnalysisStatus.COMPLETED
-        analysis.completed_at = func.now()
+        analysis.completed_at = datetime.utcnow()
         db.commit()
 
         logger.info(
