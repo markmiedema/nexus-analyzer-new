@@ -2,11 +2,12 @@
 Report generation and download API endpoints.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
+from pydantic import BaseModel
 import io
 
 from database import get_db
@@ -20,7 +21,74 @@ from services.s3_service import s3_service
 router = APIRouter()
 
 
+# ==================== Request Models ====================
+
+class ReportGenerationRequest(BaseModel):
+    """Request model for report generation."""
+    report_type: str  # 'summary' or 'detailed'
+
+
 # ==================== Report Generation Endpoints ====================
+
+@router.post("/generate/{analysis_id}", status_code=status.HTTP_202_ACCEPTED)
+async def generate_report_unified(
+    analysis_id: UUID,
+    request: ReportGenerationRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate a report for an analysis.
+
+    Accepts report_type in request body to determine which report to generate:
+    - 'summary': Executive summary with key metrics and recommendations
+    - 'detailed': Comprehensive analysis with full breakdown
+    - 'compliance': Compliance-focused report (future)
+
+    Returns task ID for tracking progress.
+    """
+    # Validate report type
+    valid_types = ['summary', 'detailed', 'compliance']
+    if request.report_type not in valid_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid report type. Must be one of: {', '.join(valid_types)}"
+        )
+
+    # Verify analysis exists and user has access
+    analysis = db.query(Analysis).filter(
+        Analysis.analysis_id == analysis_id,
+        Analysis.tenant_id == current_user.tenant_id
+    ).first()
+
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis not found"
+        )
+
+    # Check if analysis is complete
+    if analysis.status.value not in ['completed', 'processing_nexus']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Analysis must be completed before generating reports"
+        )
+
+    # Queue report generation task
+    task = generate_report.delay(
+        str(analysis_id),
+        report_type=request.report_type,
+        include_branding=True
+    )
+
+    return {
+        'analysis_id': str(analysis_id),
+        'report_type': request.report_type,
+        'task_id': task.id,
+        'status': 'queued',
+        'message': f'{request.report_type.capitalize()} report generation queued'
+    }
+
 
 @router.post("/generate/{analysis_id}/summary", status_code=status.HTTP_202_ACCEPTED)
 async def generate_summary_report(

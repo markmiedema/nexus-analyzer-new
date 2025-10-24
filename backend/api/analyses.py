@@ -209,12 +209,15 @@ async def upload_csv_to_analysis(
     1. Validates the analysis exists and is in PENDING status
     2. Uploads the file to S3/MinIO
     3. Triggers background CSV processing task
-    4. Returns updated analysis with UPLOADING status
+    4. Returns updated analysis with PENDING status
 
     Rate limited to 10 uploads per hour per user.
 
     - **file**: CSV file with transaction data
     """
+    from services.s3_service import s3_service
+    from workers.tasks import process_csv_file
+    import io
 
     # Get analysis
     analysis = db.query(Analysis).filter(
@@ -236,57 +239,76 @@ async def upload_csv_to_analysis(
         )
 
     # Validate file type
-    if not file.filename.endswith(('.csv', '.CSV')):
+    if not file.filename or not file.filename.endswith(('.csv', '.CSV')):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File must be a CSV file"
         )
 
+    # Read file content
+    file_content = await file.read()
+    file_size = len(file_content)
+
     # Validate file size (max 100MB)
-    content = await file.read()
-    if len(content) > 100 * 1024 * 1024:  # 100MB
+    if file_size > 100 * 1024 * 1024:  # 100MB
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="File size must be less than 100MB"
         )
 
-    # Reset file pointer
-    await file.seek(0)
+    if file_size == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File is empty"
+        )
 
-    # Update analysis status
+    # Update analysis status to UPLOADING
     analysis.status = AnalysisStatus.UPLOADING
     db.commit()
 
+    # Upload file to S3/MinIO
+    object_key = s3_service.build_object_key(
+        str(current_user.tenant_id),
+        str(analysis.analysis_id),
+        file.filename
+    )
+
     try:
-        # Upload file and trigger processing
-        # This will update the analysis status to PROCESSING_CSV
-        result = await csv_processor.process_upload(
-            file=file,
-            analysis_id=analysis_id,
-            tenant_id=str(current_user.tenant_id),
-            db=db
+        s3_service.upload_file(
+            io.BytesIO(file_content),
+            object_key,
+            file.content_type
         )
 
-        # Refresh analysis to get updated status
-        db.refresh(analysis)
-
-        return {
-            "message": "File uploaded successfully",
-            "analysis_id": str(analysis_id),
-            "status": analysis.status.value,
-            "csv_file_path": analysis.csv_file_path
-        }
+        # Update analysis with file path
+        analysis.csv_file_path = object_key
+        analysis.status = AnalysisStatus.PENDING
+        db.commit()
 
     except Exception as e:
         # Revert status on error
         analysis.status = AnalysisStatus.FAILED
-        analysis.error_message = str(e)
+        analysis.error_message = f"Failed to upload file: {str(e)}"
         db.commit()
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process CSV upload: {str(e)}"
+            detail=f"Failed to upload file: {str(e)}"
         )
+
+    # Queue CSV processing task
+    task = process_csv_file.delay(
+        str(analysis.analysis_id),
+        object_key
+    )
+
+    return {
+        "message": "File uploaded successfully",
+        "analysis_id": str(analysis_id),
+        "task_id": task.id,
+        "status": analysis.status.value,
+        "csv_file_path": analysis.csv_file_path
+    }
 
 
 @router.get("/{analysis_id}/status")

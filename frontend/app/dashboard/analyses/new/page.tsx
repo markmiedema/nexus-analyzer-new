@@ -70,9 +70,18 @@ export default function NewAnalysisPage() {
   const createProfileMutation = useMutation({
     mutationFn: ({ analysisId, data }: { analysisId: string; data: BusinessProfileFormData }) =>
       businessProfileApi.create({
-        business_name: data.legal_business_name || data.doing_business_as || '',
-        business_type: data.business_structure,
-        primary_state: data.locations?.[0]?.state_code,
+        analysis_id: analysisId,
+        legal_business_name: data.legal_business_name,
+        doing_business_as: data.doing_business_as,
+        business_structure: data.business_structure,
+        has_physical_presence: (data.locations?.length ?? 0) > 0,
+        has_employees: data.has_employees,
+        has_inventory: data.has_inventory,
+        uses_marketplace_facilitators: data.uses_marketplace_facilitators,
+        marketplace_facilitator_names: data.marketplace_names,
+        sells_tangible_goods: true,
+        sells_digital_goods: false,
+        sells_services: false,
       }),
     onSuccess: () => {
       setCurrentStep('processing');
