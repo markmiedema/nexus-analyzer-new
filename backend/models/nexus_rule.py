@@ -48,7 +48,8 @@ class NexusRule(Base):
     )
 
     # State and nexus type
-    state = Column(String(2), nullable=False, index=True)  # Two-letter state code
+    state_code = Column(String(2), nullable=False, index=True)  # Two-letter state code
+    state_name = Column(String(50), nullable=True)  # Full state name (optional)
     nexus_type = Column(
         SQLEnum(NexusType),
         nullable=False
@@ -85,5 +86,10 @@ class NexusRule(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    @property
+    def state(self):
+        """Backwards compatibility property - returns state_code."""
+        return self.state_code
+
     def __repr__(self):
-        return f"<NexusRule {self.state} {self.nexus_type}>"
+        return f"<NexusRule {self.state_code} {self.nexus_type}>"

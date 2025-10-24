@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 
 from models.business_profile import BusinessProfile
 from models.transaction import Transaction
-from models.nexus_rule import NexusRule, ThresholdType, MeasurementPeriod
+from models.nexus_rule import NexusRule, ThresholdMeasurement, MeasurementPeriod
 from models.nexus_result import NexusResult, NexusStatus, ConfidenceLevel
 from models.analysis import Analysis
 from services.business_profile_service import business_profile_service
@@ -237,17 +237,17 @@ class NexusEngine:
         threshold_met_reason = []
         notes = []
 
-        if rule.threshold_type == ThresholdType.SALES_ONLY:
+        if rule.threshold_type == ThresholdMeasurement.SALES_ONLY:
             if taxable_sales >= rule.sales_threshold:
                 has_nexus = True
                 threshold_met_reason.append(f"Sales ${taxable_sales:,.2f} >= ${rule.sales_threshold:,.2f}")
 
-        elif rule.threshold_type == ThresholdType.TRANSACTIONS_ONLY:
+        elif rule.threshold_type == ThresholdMeasurement.TRANSACTIONS_ONLY:
             if transaction_count >= rule.transaction_threshold:
                 has_nexus = True
                 threshold_met_reason.append(f"{transaction_count} transactions >= {rule.transaction_threshold}")
 
-        elif rule.threshold_type == ThresholdType.EITHER:
+        elif rule.threshold_type == ThresholdMeasurement.SALES_OR_TRANSACTIONS:
             sales_met = taxable_sales >= rule.sales_threshold
             transactions_met = transaction_count >= rule.transaction_threshold
 
@@ -258,7 +258,7 @@ class NexusEngine:
                 if transactions_met:
                     threshold_met_reason.append(f"{transaction_count} transactions >= {rule.transaction_threshold}")
 
-        elif rule.threshold_type == ThresholdType.BOTH:
+        elif rule.threshold_type == ThresholdMeasurement.SALES_AND_TRANSACTIONS:
             sales_met = taxable_sales >= rule.sales_threshold
             transactions_met = transaction_count >= rule.transaction_threshold
 
@@ -386,19 +386,19 @@ class NexusEngine:
             # Check if threshold crossed
             threshold_crossed = False
 
-            if rule.threshold_type == ThresholdType.SALES_ONLY:
+            if rule.threshold_type == ThresholdMeasurement.SALES_ONLY:
                 if running_sales >= rule.sales_threshold:
                     threshold_crossed = True
 
-            elif rule.threshold_type == ThresholdType.TRANSACTIONS_ONLY:
+            elif rule.threshold_type == ThresholdMeasurement.TRANSACTIONS_ONLY:
                 if running_transactions >= rule.transaction_threshold:
                     threshold_crossed = True
 
-            elif rule.threshold_type == ThresholdType.EITHER:
+            elif rule.threshold_type == ThresholdMeasurement.SALES_OR_TRANSACTIONS:
                 if running_sales >= rule.sales_threshold or running_transactions >= rule.transaction_threshold:
                     threshold_crossed = True
 
-            elif rule.threshold_type == ThresholdType.BOTH:
+            elif rule.threshold_type == ThresholdMeasurement.SALES_AND_TRANSACTIONS:
                 if running_sales >= rule.sales_threshold and running_transactions >= rule.transaction_threshold:
                     threshold_crossed = True
 
@@ -460,7 +460,7 @@ class NexusEngine:
         threshold_percentage = None
         days_until = None
 
-        if rule.threshold_type in [ThresholdType.SALES_ONLY, ThresholdType.EITHER, ThresholdType.BOTH]:
+        if rule.threshold_type in [ThresholdMeasurement.SALES_ONLY, ThresholdMeasurement.SALES_OR_TRANSACTIONS, ThresholdMeasurement.SALES_AND_TRANSACTIONS]:
             if rule.sales_threshold:
                 sales_percentage = float(taxable_sales / rule.sales_threshold)
                 threshold_percentage = sales_percentage * 100
@@ -475,7 +475,7 @@ class NexusEngine:
                         transactions
                     )
 
-        if rule.threshold_type in [ThresholdType.TRANSACTIONS_ONLY, ThresholdType.EITHER, ThresholdType.BOTH]:
+        if rule.threshold_type in [ThresholdMeasurement.TRANSACTIONS_ONLY, ThresholdMeasurement.SALES_OR_TRANSACTIONS, ThresholdMeasurement.SALES_AND_TRANSACTIONS]:
             if rule.transaction_threshold:
                 txn_percentage = transaction_count / rule.transaction_threshold
 

@@ -10,6 +10,7 @@ from services.s3_service import s3_service
 import logging
 import json
 import io
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,10 @@ def process_csv_file(self, analysis_id: str, csv_file_path: str):
                 )
                 analysis.validation_report_path = report_path
                 db.commit()
+
+            # Trigger nexus determination task
+            logger.info(f"Triggering nexus determination for analysis {analysis_id}")
+            run_nexus_determination.delay(analysis_id)
 
             return result
         else:
@@ -182,7 +187,7 @@ def run_nexus_determination(self, analysis_id: str):
 
         # Update analysis status
         analysis.status = AnalysisStatus.COMPLETED
-        analysis.completed_at = func.now()
+        analysis.completed_at = datetime.utcnow()
         db.commit()
 
         logger.info(
