@@ -81,3 +81,4 @@ reports/
 
 # Alembic
 alembic/__pycache__/
+backend/coverage.xml
