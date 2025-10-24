@@ -105,6 +105,7 @@ services:
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME:-nexus-analyzer}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      PYTHONPATH: /app
     volumes:
       - ./backend:/app
     depends_on:

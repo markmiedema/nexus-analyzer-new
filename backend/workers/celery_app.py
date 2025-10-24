@@ -28,5 +28,6 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
 )
 
-# Auto-discover tasks from tasks module
-celery_app.autodiscover_tasks(["workers"])
+# Import tasks to register them with Celery
+# Must import after celery_app is configured
+from workers import tasks  # noqa: F401, E402
