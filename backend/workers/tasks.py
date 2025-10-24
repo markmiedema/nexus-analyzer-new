@@ -77,6 +77,10 @@ def process_csv_file(self, analysis_id: str, csv_file_path: str):
                 analysis.validation_report_path = report_path
                 db.commit()
 
+            # Trigger nexus determination task
+            logger.info(f"Triggering nexus determination for analysis {analysis_id}")
+            run_nexus_determination.delay(analysis_id)
+
             return result
         else:
             # Processing failed
