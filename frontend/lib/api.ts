@@ -18,12 +18,26 @@ export interface Analysis {
 
 export interface BusinessProfile {
   profile_id: string;
-  business_name: string;
-  tax_id?: string;
-  business_type?: string;
-  primary_state?: string;
+  analysis_id: string;
+  legal_business_name: string;
+  doing_business_as?: string;
+  federal_ein?: string;
+  business_structure?: string;
+  industry?: string;
+  naics_code?: string;
+  has_physical_presence: boolean;
+  has_employees: boolean;
+  has_inventory: boolean;
+  uses_marketplace_facilitators: boolean;
+  marketplace_facilitator_names?: string[];
+  sells_tangible_goods: boolean;
+  sells_digital_goods: boolean;
+  sells_services: boolean;
+  has_exempt_sales: boolean;
+  exempt_customer_types?: string[];
+  notes?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface NexusResult {
@@ -138,15 +152,15 @@ export const analysesApi = {
 // Business Profile API
 export const businessProfileApi = {
   list: async (): Promise<BusinessProfile[]> => {
-    return apiFetch<BusinessProfile[]>('/business-profiles');
+    return apiFetch<BusinessProfile[]>('/business-profile');
   },
 
   get: async (id: string): Promise<BusinessProfile> => {
-    return apiFetch<BusinessProfile>(`/business-profiles/${id}`);
+    return apiFetch<BusinessProfile>(`/business-profile/${id}`);
   },
 
   create: async (data: Partial<BusinessProfile>): Promise<BusinessProfile> => {
-    return apiFetch<BusinessProfile>('/business-profiles', {
+    return apiFetch<BusinessProfile>('/business-profile', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -156,14 +170,14 @@ export const businessProfileApi = {
     id: string,
     data: Partial<BusinessProfile>
   ): Promise<BusinessProfile> => {
-    return apiFetch<BusinessProfile>(`/business-profiles/${id}`, {
+    return apiFetch<BusinessProfile>(`/business-profile/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: string): Promise<void> => {
-    return apiFetch<void>(`/business-profiles/${id}`, {
+    return apiFetch<void>(`/business-profile/${id}`, {
       method: 'DELETE',
     });
   },
@@ -205,17 +219,16 @@ export const liabilityApi = {
 // Reports API
 export const reportsApi = {
   list: async (analysisId: string): Promise<Report[]> => {
-    return apiFetch<Report[]>(`/reports/analysis/${analysisId}`);
+    return apiFetch<Report[]>(`/reports/list/${analysisId}`);
   },
 
   generate: async (
     analysisId: string,
     reportType: 'summary' | 'detailed' | 'compliance'
   ): Promise<Report> => {
-    return apiFetch<Report>('/reports/generate', {
+    return apiFetch<Report>(`/reports/generate/${analysisId}`, {
       method: 'POST',
       body: JSON.stringify({
-        analysis_id: analysisId,
         report_type: reportType,
       }),
     });
