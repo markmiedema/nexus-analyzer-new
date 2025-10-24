@@ -11,7 +11,7 @@ from middleware.tenant import TenantMiddleware
 from utils.rate_limit import limiter
 
 # Import API routers
-from api import auth, tenants, users, csv_processor, business_profile, nexus_rules, liability, reports
+from api import auth, tenants, users, csv_processor, business_profile, nexus_rules, liability, reports, analyses
 
 # Create FastAPI application
 app = FastAPI(
@@ -42,6 +42,7 @@ app.add_middleware(TenantMiddleware)
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+app.include_router(analyses.router, prefix="/api/v1/analyses", tags=["analyses"])
 app.include_router(csv_processor.router, prefix="/api/v1/csv", tags=["csv"])
 app.include_router(business_profile.router, prefix="/api/v1/business-profile", tags=["business-profile"])
 app.include_router(nexus_rules.router, prefix="/api/v1/nexus", tags=["nexus"])
