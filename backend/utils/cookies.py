@@ -15,8 +15,9 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         access_token: JWT access token
         refresh_token: JWT refresh token
     """
-    # Use SameSite=none for development to allow cross-origin cookies (localhost:3000 -> localhost:8000)
-    samesite = "none" if settings.ENVIRONMENT == "development" else settings.COOKIE_SAMESITE
+    # Use SameSite=lax for development (localhost:3000 and localhost:8000 are same site)
+    # Use configured setting for production
+    samesite = "lax" if settings.ENVIRONMENT == "development" else settings.COOKIE_SAMESITE
 
     # Set access token cookie
     response.set_cookie(

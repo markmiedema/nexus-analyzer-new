@@ -103,7 +103,7 @@ export const analysesApi = {
     return apiFetch<Analysis>(`/analyses/${id}`);
   },
 
-  create: async (data: { business_profile_id: string }): Promise<Analysis> => {
+  create: async (data: { client_name: string; period_start: string; period_end: string }): Promise<Analysis> => {
     return apiFetch<Analysis>('/analyses', {
       method: 'POST',
       body: JSON.stringify(data),
